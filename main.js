@@ -1,6 +1,7 @@
 
 import {
 
+    //board
     boardDimensions,
     scaleFactor,
     gridWidth,
@@ -19,6 +20,7 @@ class Environment {
         this.setCanvas();
         this.createGameboard();
         this.drawGameboard();
+
     }
 
     setCanvas() {
@@ -41,10 +43,10 @@ class Environment {
         this.contextBoard.fillRect(0, 0, this.canvasBoard.width, this.canvasBoard.height);
     }
     
-    drawGridLinesBox(x , y){
+    drawGridLinesBox(coordinateX , coordinateY){
         this.contextBoard.strokeStyle = gridLineColor;
         this.contextBoard.lineWidth = gridWidth / this.scaleFactor;
-        this.contextBoard.strokeRect(x, y, 1, 1);
+        this.contextBoard.strokeRect(coordinateX, coordinateY, 1, 1);
     } 
 
     drawGridLinesBoard() {
@@ -63,3 +65,40 @@ class Environment {
 }
 
 const environment = new Environment(boardDimensions, scaleFactor);
+
+
+class PieceTemplate {
+    
+    constructor() {
+        this.name;
+        this.moves;
+        this.imagePath;
+    }
+
+
+
+}
+
+
+class Pieces {
+    constructor(){
+        this.name;
+        this.color;
+        this.position;
+        this.moves;
+        this.active;
+    }
+
+}
+
+
+class Players {
+    constructor() {
+        this.color;
+        this.score;
+        this.turn;
+        this.takenPieces
+
+    }
+}
+
