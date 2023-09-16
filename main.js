@@ -74,13 +74,10 @@ class PieceTemplate {
         this.moves;
         this.imagePath;
     }
-
-
-
 }
 
 
-class Pieces {
+class Pieces extends PieceTemplate{
     constructor(){
         this.name;
         this.color;
@@ -101,4 +98,3 @@ class Players {
 
     }
 }
-
