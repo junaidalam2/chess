@@ -8,6 +8,7 @@ export const gridLineColor = 'gray';
 
 export const moves = {
 
+    //proportional - can move part of array; jump - can jump over other pieces
     pawn: {coordinates: [[0, 1]], proportional: false, jump: false}, // diagonal missing
     knight: {coordinates: [[-1, 2], [-2, 1], [1, 2], [2, 1]], proportional: false, jump: true},
     bishop: {coordinates: [[-8, 8], [8, 8]], proportional: true, jump: false},
