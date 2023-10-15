@@ -1,4 +1,11 @@
 
+/*
+TODO:
+-create a session class that can create instances of the other relevant classes
+-allow a user to click on a square and move piece
+
+*/
+
 import {
 
     //board
@@ -9,6 +16,8 @@ import {
     gridLineColor,
 
     //pieces
+    pieceHeight,
+    pieceWidth,
     startingPosition,
     moves,
     pieceImages,
@@ -64,7 +73,7 @@ class Board {
     }
 
     drawGameboard() {
-        //this.fillCanvasBackground();
+        this.fillCanvasBackground();
         this.drawGridLinesBoard();
     }
 
@@ -90,7 +99,17 @@ class Pieces {
         this.imagePath = imagePath;
         this.position = position;
         this.active = true;
+        this.drawPiece();
     }
+
+    drawPiece() {
+        let img = new Image();
+        img.src = this.imagePath;
+        img.onload = () => {
+            board.contextBoard.drawImage(img, this.position[1], this.position[0], pieceWidth, pieceHeight);
+        }
+    }
+    
 }
 
 
@@ -116,16 +135,23 @@ function setupPieces(color) {
 blackPlayer.pieces = setupPieces('black');
 whitePlayer.pieces = setupPieces('white');
 
-
-
-// try to draw one image and then replicate to all pieces.
-function make_base() {
+/*
+function drawPiece(imgPath, coordinates) {
     let img = new Image();
-    img.src = './test.png';
+    img.src = imgPath;
     img.onload = () => {
-        board.contextBoard.drawImage(img, 1, 1, 100, 100);
+        board.contextBoard.drawImage(img, coordinates[1], coordinates[0], pieceWidth, pieceHeight);
     }
-    
 }
 
-make_base()
+
+function drawPlayerPieces(pieceInstanceArray) {
+
+    pieceInstanceArray.forEach((instance) => {
+        drawPiece(instance.imagePath, instance.position)
+    })
+}
+
+drawPlayerPieces(blackPlayer.pieces)
+drawPlayerPieces(whitePlayer.pieces)
+*/
