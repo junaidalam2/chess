@@ -8,10 +8,17 @@ import {
     gameboardColor,
     gridLineColor,
 
-} from './constants.js'
+    //pieces
+    startingPosition,
+    moves,
+    pieceImages,
+    pieceNamesArray,
+    pieceCountArray,
+
+} from './constants.js';
 
 
-class Environment {
+class Board {
 
     constructor(boardDimensions, scaleFactor) {
         this.dimensions = boardDimensions;
@@ -20,7 +27,6 @@ class Environment {
         this.setCanvas();
         this.createGameboard();
         this.drawGameboard();
-
     }
 
     setCanvas() {
@@ -64,37 +70,48 @@ class Environment {
 
 }
 
-const environment = new Environment(boardDimensions, scaleFactor);
-
-
-class PieceTemplate {
-    
-    constructor() {
-        this.name;
-        this.moves;
-        this.imagePath;
-    }
-}
-
-
-class Pieces extends PieceTemplate{
-    constructor(){
-        this.name;
-        this.color;
-        this.position;
-        this.moves;
-        this.active;
-    }
-
-}
-
 
 class Players {
-    constructor() {
-        this.color;
-        this.score;
-        this.turn;
-        this.takenPieces
-
+    constructor(color, turn = false) {
+        this.color = color;
+        this.score = 0;
+        this.turn = turn;
+        this.pieces = null;
+        this.takenPieces = [];
     }
 }
+
+
+class Pieces {
+    constructor(type, moves, color, imagePath, position) {
+        this.type = type;
+        this.moves = moves;
+        this.color = color;
+        this.imagePath = imagePath;
+        this.position = position;
+        this.active = true;
+    }
+}
+
+
+const board = new Board(boardDimensions, scaleFactor);
+const blackPlayer = new Players('black');
+const whitePlayer = new Players('white', true);
+
+
+function setupPieces(color) {
+
+    let pieceInstanceArray = [];
+
+    pieceNamesArray.forEach((element, index) => {
+        for(let i = 0; i < pieceCountArray[index]; i++) {
+            const piece = new Pieces(element, moves[element], color, pieceImages[element][color], startingPosition[element][color][i]);
+            pieceInstanceArray.push(piece);
+        }
+    });
+
+    return pieceInstanceArray;
+}
+
+blackPlayer.pieces = setupPieces('black');
+whitePlayer.pieces = setupPieces('white');
