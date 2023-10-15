@@ -64,7 +64,7 @@ class Board {
     }
 
     drawGameboard() {
-        this.fillCanvasBackground();
+        //this.fillCanvasBackground();
         this.drawGridLinesBoard();
     }
 
@@ -115,3 +115,17 @@ function setupPieces(color) {
 
 blackPlayer.pieces = setupPieces('black');
 whitePlayer.pieces = setupPieces('white');
+
+
+
+// try to draw one image and then replicate to all pieces.
+function make_base() {
+    let img = new Image();
+    img.src = './test.png';
+    img.onload = () => {
+        board.contextBoard.drawImage(img, 1, 1, 100, 100);
+    }
+    
+}
+
+make_base()
