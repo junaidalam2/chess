@@ -13,7 +13,10 @@ import {
     scaleFactor,
     gridWidth,
     gameboardColor,
+    selectedSquareColor,
     gridLineColor,
+    gridLineCursor,
+    mousePositionOffset,
 
     //pieces
     pieceHeight,
@@ -33,9 +36,14 @@ class Board {
         this.dimensions = boardDimensions;
         this.scaleFactor = scaleFactor;
         this.boardArray = [];
+        this.mouseGridPosition = {x: null, y: null};
+        this.mouseSquareSelected = {x: null, y: null};
+        this.pieceSelected = null;
+        this.desiredPieceSquare = {x: null, y: null};
         this.setCanvas();
         this.createGameboard();
         this.drawGameboard();
+        //this.findPieceSelected(player);
     }
 
     setCanvas() {
@@ -58,16 +66,16 @@ class Board {
         this.contextBoard.fillRect(0, 0, this.canvasBoard.width, this.canvasBoard.height);
     }
     
-    drawGridLinesBox(coordinateX , coordinateY){
+    drawGridLinesBox(coordinateX , coordinateY, gridLineColor) {
         this.contextBoard.strokeStyle = gridLineColor;
         this.contextBoard.lineWidth = gridWidth / this.scaleFactor;
-        this.contextBoard.strokeRect(coordinateX, coordinateY, 1, 1);
+        this.contextBoard.strokeRect(coordinateX, coordinateY, gridWidth, gridWidth);
     } 
 
     drawGridLinesBoard() {
         this.boardArray.forEach((row, indexY) => {
             row.forEach((square, indexX) => {
-                this.drawGridLinesBox(indexX , indexY);
+                this.drawGridLinesBox(indexX , indexY, gridLineColor);
             })
         })
     }
@@ -77,6 +85,96 @@ class Board {
         this.drawGridLinesBoard();
     }
 
+    drawSquare(indexX, indexY, color) {
+        this.fillSquareBackground(indexX, indexY, color);
+        this.pieceSelected.drawPiece();
+
+    }
+
+    fillSquareBackground(indexX, indexY, color) {
+        this.contextBoard.fillStyle = color;
+        this.contextBoard.fillRect(indexX, indexY, gridWidth, gridWidth);
+    }
+
+    mapMousePositionToGrid(x, y) {
+        this.drawGridLinesBoard();
+
+        if ((x > mousePositionOffset.x && x < scaleFactor * boardDimensions) && 
+            (y > mousePositionOffset.y && y < scaleFactor * boardDimensions)) {
+                this.mouseGridPosition.x = Math.floor( x / scaleFactor); 
+                this.mouseGridPosition.y = Math.floor( y / scaleFactor);
+                this.drawGridLinesBox(this.mouseGridPosition.x , this.mouseGridPosition.y, gridLineCursor);
+        } else {
+            this.mouseGridPosition.x = null;
+            this.mouseGridPosition.y = null;
+        }
+    }
+
+    possibleMoves() {
+ 
+
+    }
+
+    clickListener() {
+        if(this.mouseGridPosition.x != null && this.mouseGridPosition.y != null) {   
+                this.mouseSquareSelected.x = this.mouseGridPosition.x;
+                this.mouseSquareSelected.y = this.mouseGridPosition.y;
+            
+            if(!this.pieceSelected) {
+                this.findPieceSelected(whitePlayer);
+            
+            } else if (this.pieceSelected.position[0] == this.mouseSquareSelected.x &&
+                this.pieceSelected.position[1] == this.mouseSquareSelected.y) {
+                    this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
+                    this.pieceSelected = null;
+                    
+                    if(this.desiredPieceSquare.x != null && this.desiredPieceSquare.y != null) {
+                        this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gameboardColor);
+                        this.drawGridLinesBox(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gridLineColor);
+                    }
+                    
+                    this.desiredPieceSquare.x = null;
+                    this.desiredPieceSquare.y = null;
+            
+            } else if (this.pieceSelected) {
+                
+                if (this.desiredPieceSquare.x != null && this.desiredPieceSquare.y != null) {
+                    this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gameboardColor);
+                    this.drawGridLinesBox(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gridLineColor);
+                }
+                
+                if(this.boardArray[this.mouseSquareSelected.x][this.mouseSquareSelected.y] == 0) {
+                    if(this.desiredPieceSquare.x == this.mouseSquareSelected.x && 
+                        this.desiredPieceSquare.y == this.mouseSquareSelected.y) {
+                            this.fillSquareBackground(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
+                            this.boardArray[this.pieceSelected.position[0]][this.pieceSelected.position[1]] = 0;
+                            this.pieceSelected.position[0] = this.desiredPieceSquare.x;
+                            this.pieceSelected.position[1] = this.desiredPieceSquare.y;
+                            this.boardArray[this.pieceSelected.position[0]][this.pieceSelected.position[1]] = 1;
+                            this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
+                            this.desiredPieceSquare.x = null;
+                            this.desiredPieceSquare.y = null;
+                            this.pieceSelected = null;
+                    } else { 
+                            this.desiredPieceSquare.x = this.mouseSquareSelected.x;
+                            this.desiredPieceSquare.y = this.mouseSquareSelected.y;
+                            this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, selectedSquareColor);
+                    }
+                }
+            }
+        }
+    }
+
+    findPieceSelected(player) {
+        player.pieces.forEach((element) => {
+            if(element.position[0] == this.mouseSquareSelected.x && element.position[1] == this.mouseSquareSelected.y) {
+                this.pieceSelected = element;
+                this.drawSquare(element.position[0],element.position[1], selectedSquareColor);
+            }
+       })
+    }
+
+ 
 }
 
 
@@ -106,9 +204,17 @@ class Pieces {
         let img = new Image();
         img.src = this.imagePath;
         img.onload = () => {
-            board.contextBoard.drawImage(img, this.position[1], this.position[0], pieceWidth, pieceHeight);
+            board.contextBoard.drawImage(img, this.position[0], this.position[1], pieceWidth, pieceHeight);
         }
+        this.updateBoardArray();
     }
+
+    updateBoardArray() {
+        board.boardArray[this.position[0]][this.position[1]] = 1;
+    }
+
+
+
     
 }
 
@@ -135,23 +241,10 @@ function setupPieces(color) {
 blackPlayer.pieces = setupPieces('black');
 whitePlayer.pieces = setupPieces('white');
 
-/*
-function drawPiece(imgPath, coordinates) {
-    let img = new Image();
-    img.src = imgPath;
-    img.onload = () => {
-        board.contextBoard.drawImage(img, coordinates[1], coordinates[0], pieceWidth, pieceHeight);
-    }
-}
+window.addEventListener('mousemove', function(e) {
+    board.mapMousePositionToGrid(e.x, e.y);
+});
 
-
-function drawPlayerPieces(pieceInstanceArray) {
-
-    pieceInstanceArray.forEach((instance) => {
-        drawPiece(instance.imagePath, instance.position)
-    })
-}
-
-drawPlayerPieces(blackPlayer.pieces)
-drawPlayerPieces(whitePlayer.pieces)
-*/
+window.addEventListener('click', function() {
+    board.clickListener();
+});
