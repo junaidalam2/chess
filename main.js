@@ -35,15 +35,14 @@ class Board {
     constructor(boardDimensions, scaleFactor) {
         this.dimensions = boardDimensions;
         this.scaleFactor = scaleFactor;
-        this.boardArray = [];
+        this.boardArray = this.createArray();
+        this.possibleMovesArray = this.createArray();
         this.mouseGridPosition = {x: null, y: null};
         this.mouseSquareSelected = {x: null, y: null};
         this.pieceSelected = null;
         this.desiredPieceSquare = {x: null, y: null};
         this.setCanvas();
-        this.createGameboard();
         this.drawGameboard();
-        //this.findPieceSelected(player);
     }
 
     setCanvas() {
@@ -54,11 +53,16 @@ class Board {
         this.contextBoard.scale(this.scaleFactor, this.scaleFactor);
     }
 
-    createGameboard() {
+    createArray() {
+        
+        let twoDimensionalArray = []
+        
         for(let i = 0; i < this.dimensions; i++) {
             const rowArray = new Array(this.dimensions).fill(0);
-            this.boardArray.push(rowArray);
+            twoDimensionalArray.push(rowArray);
         }
+
+        return twoDimensionalArray
     }
 
     fillCanvasBackground() {
@@ -110,8 +114,95 @@ class Board {
         }
     }
 
+    
     possibleMoves() {
- 
+
+        let coordinatesArray = this.pieceSelected.moves.coordinates;
+        let canJump = this.pieceSelected.moves.jump;
+        let currentPosition = this.pieceSelected.position;
+        
+
+
+        if(canJump) {
+
+            
+            coordinatesArray.forEach((element) => {
+
+                
+                console.log(coordinatesArray);
+          
+                let xCoordinate = currentPosition[0];
+                let yCoordinate = currentPosition[1];
+                let occupiedSamePlayer = this.pieceSelected.color.charAt(0);
+
+                    console.log(xCoordinate, yCoordinate)
+
+                    xCoordinate = xCoordinate + element[0];
+                    yCoordinate = yCoordinate + element[1];
+
+                    console.log("-------");
+                    console.log(xCoordinate, yCoordinate);
+
+                    if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
+                        yCoordinate < 0 || yCoordinate >= boardDimensions || 
+                        this.boardArray[xCoordinate][yCoordinate] == occupiedSamePlayer) {
+                          
+                    } else {
+                        this.possibleMovesArray[xCoordinate][yCoordinate] = 1;
+                    }
+
+           
+
+            });
+
+            console.table(this.possibleMovesArray);
+
+        } else {
+
+            coordinatesArray.forEach((element) => {
+               
+                let exitFlag = 0;
+                let xDirection = element[0] = 0 ? 0 : element[0] / Math.abs(element[0]);
+                let yDirection = element[1] = 0 ? 0 : element[1] / Math.abs(element[1]);
+                let xCoordinate = currentPosition[0];
+                let yCoordinate = currentPosition[1];
+                let occupiedSamePlayer = this.pieceSelected.color.charAt(0);
+                let occupiedOtherPlayerCounter = 0;
+
+                let xMax = element[0] = 0 ? boardDimensions - 1 : element[0];
+                let yMax = element[1] = 0 ? boardDimensions - 1 : element[1];
+                let xCounter = 0;
+                let yCounter = 0;
+
+                do {
+
+                    xCoordinate = xCoordinate + xDirection;
+                    yCoordinate = yCoordinate + yDirection;
+
+                    if(this.possibleMovesArray[xCoordinate][yCoordinate] &&
+                        this.possibleMovesArray[xCoordinate][yCoordinate] != occupiedSamePlayer) {
+                            occupiedOtherPlayerCounter++;
+                    }
+                    
+                    if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
+                        yCoordinate < 0 || yCoordinate >= boardDimensions || 
+                        this.boardArray[xCoordinate][yCoordinate] == occupiedSamePlayer ||
+                        occupiedOtherPlayerCounter > 1 || xCounter > xMax || yCounter > yMax) {
+                            exitFlag = 1;
+                    } else {
+                       this.possibleMovesArray[xCoordinate][yCoordinate] = 1;
+                    }
+
+                    xCounter++;
+                    yCounter++;
+
+                } while (!exitFlag);
+
+            });
+
+        } 
+
+        
 
     }
 
@@ -122,6 +213,7 @@ class Board {
             
             if(!this.pieceSelected) {
                 this.findPieceSelected(whitePlayer);
+                this.possibleMoves();
             
             } else if (this.pieceSelected.position[0] == this.mouseSquareSelected.x &&
                 this.pieceSelected.position[1] == this.mouseSquareSelected.y) {
@@ -150,7 +242,7 @@ class Board {
                             this.boardArray[this.pieceSelected.position[0]][this.pieceSelected.position[1]] = 0;
                             this.pieceSelected.position[0] = this.desiredPieceSquare.x;
                             this.pieceSelected.position[1] = this.desiredPieceSquare.y;
-                            this.boardArray[this.pieceSelected.position[0]][this.pieceSelected.position[1]] = 1;
+                            this.boardArray[this.pieceSelected.position[0]][this.pieceSelected.position[1]] = this.pieceSelected.color.charAt(0);
                             this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
                             this.desiredPieceSquare.x = null;
                             this.desiredPieceSquare.y = null;
@@ -210,7 +302,7 @@ class Pieces {
     }
 
     updateBoardArray() {
-        board.boardArray[this.position[0]][this.position[1]] = 1;
+        board.boardArray[this.position[0]][this.position[1]] = this.color.charAt(0);
     }
 
 

@@ -41,12 +41,12 @@ export let pieceCountArray = generatePieceCount();
 export const moves = {
 
     //proportional - can move part of array; jump - can jump over other pieces
-    bishop: {coordinates: [[-7, 7], [7, 7]], proportional: true, jump: false, hadFirstMove: false},
-    king: {coordinates: [[-1, 1], [1, 1], [-1, 0], [0, 1], [0, 1]], proportional: false, jump: false, hadFirstMove: false}, // castle outstanding
-    knight: {coordinates: [[-1, 2], [-2, 1], [1, 2], [2, 1]], proportional: false, jump: true, hadFirstMove: false},
-    pawn: {coordinates: [[0, 1]], proportional: false, jump: false, hadFirstMove: false}, // diagonal missing + first move oustanding
-    queen: {coordinates: [[-7, 7], [7, 7], [-7, 0], [7, 0], [0, 7]], proportional: true, jump: false, hadFirstMove: false},
-    rook: {coordinates: [[-7, 0], [7, 0], [0, 7]], proportional: true, jump: false, hadFirstMove: false}, // castle outstanding
+    bishop: {coordinates: [[-7, 7], [7, 7]], jump: false, hadFirstMove: false},
+    king: {coordinates: [[-1, 1], [1, 1], [-1, 0], [0, 1], [0, 1]], jump: false, hadFirstMove: false}, // castle outstanding
+    knight: {coordinates: [[-1, 2], [1, 2], [-2, 1], [-2, -1], [2, -1], [2, 1], [-2, -1], [-2, 1]], jump: true, hadFirstMove: false},
+    pawn: {coordinates: [[0, 1]], jump: false, hadFirstMove: false}, // diagonal missing + first move oustanding
+    queen: {coordinates: [[-7, 7], [7, 7], [-7, 0], [7, 0], [0, 7]], jump: false, hadFirstMove: false},
+    rook: {coordinates: [[-7, 0], [7, 0], [0, 7]], jump: false, hadFirstMove: false}, // castle outstanding
 
     //bottom lefthand corner are coordinates x = 0, y = 0;
     //coordinates for player on bottom side;
