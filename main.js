@@ -144,8 +144,11 @@ class Board {
                     console.log(xCoordinate, yCoordinate);
 
                     if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
-                        yCoordinate < 0 || yCoordinate >= boardDimensions || 
-                        this.boardArray[xCoordinate][yCoordinate] == occupiedSamePlayer) {
+                        yCoordinate < 0 || yCoordinate >= boardDimensions) {
+                            return;
+                    } 
+
+                    if(this.boardArray[xCoordinate][yCoordinate] == occupiedSamePlayer) {
                           
                     } else {
                         this.possibleMovesArray[xCoordinate][yCoordinate] = 1;
@@ -166,6 +169,7 @@ class Board {
                 let yDirection = element[1] = 0 ? 0 : element[1] / Math.abs(element[1]);
                 let xCoordinate = currentPosition[0];
                 let yCoordinate = currentPosition[1];
+                
                 let occupiedSamePlayer = this.pieceSelected.color.charAt(0);
                 let occupiedOtherPlayerCounter = 0;
 
@@ -179,17 +183,21 @@ class Board {
                     xCoordinate = xCoordinate + xDirection;
                     yCoordinate = yCoordinate + yDirection;
 
-                    if(this.possibleMovesArray[xCoordinate][yCoordinate] &&
-                        this.possibleMovesArray[xCoordinate][yCoordinate] != occupiedSamePlayer) {
-                            occupiedOtherPlayerCounter++;
-                    }
-                    
                     if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
-                        yCoordinate < 0 || yCoordinate >= boardDimensions || 
-                        this.boardArray[xCoordinate][yCoordinate] == occupiedSamePlayer ||
+                        yCoordinate < 0 || yCoordinate >= boardDimensions) {
+                            return;
+                    } 
+                    
+                    if(this.boardArray[xCoordinate][yCoordinate] == occupiedSamePlayer ||
                         occupiedOtherPlayerCounter > 1 || xCounter > xMax || yCounter > yMax) {
                             exitFlag = 1;
                     } else {
+
+                        if(this.possibleMovesArray[xCoordinate][yCoordinate] &&
+                            this.possibleMovesArray[xCoordinate][yCoordinate] != occupiedSamePlayer) {
+                                occupiedOtherPlayerCounter++;
+                        }
+                        
                        this.possibleMovesArray[xCoordinate][yCoordinate] = 1;
                     }
 
@@ -199,6 +207,8 @@ class Board {
                 } while (!exitFlag);
 
             });
+
+            console.table(this.possibleMovesArray);
 
         } 
 
@@ -303,6 +313,7 @@ class Pieces {
 
     updateBoardArray() {
         board.boardArray[this.position[0]][this.position[1]] = this.color.charAt(0);
+        console.log(board.boardArray);
     }
 
 
