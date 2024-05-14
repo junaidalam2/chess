@@ -42,16 +42,20 @@ export const moves = {
 
     //jump - can jump over other pieces
     bishop: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7]], jump: false, unidirectional: false, hadFirstMove: false},
-    king: {coordinates: [[-1, 1], [1, 1], [-1, 0], [0, 1], [0, 1]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
+    king: {coordinates: [[-1, 1], [1, 1], [1, -1], [-1, -1], [-1, 0], [1, 0], [0, 1], [0, -1]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
     knight: {coordinates: [[2, -1], [2, 1], [-2, -1], [-2, 1], [-1, 2], [1, 2], [-1, -2], [1, -2]], jump: true, unidirectional: false, hadFirstMove: false},
     pawn: {coordinates: [[0, 1]], jump: false, unidirectional: true, hadFirstMove: false}, // diagonal missing + first move oustanding
-    queen: {coordinates: [[-7, 7], [7, 7], [-7, 0], [7, 0], [0, 7]], jump: false, unidirectional: false, hadFirstMove: false},
+    queen: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7], [-7, 0], [7, 0], [0, 7], [0, -7]], jump: false, unidirectional: false, hadFirstMove: false},
     rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
 
     //top lefthand corner are coordinates x = 0, y = 0;
     //coordinates for player on bottom side;
-    //to obtain moves for top player, multiply 8 moves by -1;
     //to add specialty (non-standard) moves;
+    // pawn - 2 moves on first 
+    // pawn - kill enemeny on diagonal only, no killing directly
+    // pawn - en passant
+    // king + rook - castling
+    // promote pawn to other pieces (doesn't need to be a captured piece) 
 
 } 
 

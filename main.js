@@ -2,7 +2,6 @@
 /*
 TODO:
 -create a session class that can create instances of the other relevant classes
--allow a user to click on a square and move piece
 
 */
 
@@ -215,12 +214,17 @@ class Board {
                             exitFlag = 1;
                     } else {
 
-                        if(this.possibleMovesArray[yCoordinate][xCoordinate] &&
-                            this.possibleMovesArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
+                        console.log('this.boardArray[yCoordinate][xCoordinate]', this.boardArray[yCoordinate][xCoordinate])
+                        console.log('this.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer', this.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer)
+                        if(this.boardArray[yCoordinate][xCoordinate] &&
+                            this.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
                                 occupiedOtherPlayerCounter++;
+                                console.log('occupiedOtherPlayerCounter', occupiedOtherPlayerCounter)
                         }
                         
-                       this.possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                        if( occupiedOtherPlayerCounter < 2 ) {
+                           this.possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                        }
                     }
 
                     xCounter++;
