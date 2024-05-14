@@ -40,15 +40,15 @@ function generatePieceCount() {
 export let pieceCountArray = generatePieceCount();
 export const moves = {
 
-    //proportional - can move part of array; jump - can jump over other pieces
-    bishop: {coordinates: [[-7, 7], [7, 7]], jump: false, hadFirstMove: false},
-    king: {coordinates: [[-1, 1], [1, 1], [-1, 0], [0, 1], [0, 1]], jump: false, hadFirstMove: false}, // castle outstanding
-    knight: {coordinates: [[-1, 2], [1, 2], [-2, 1], [-2, -1], [2, -1], [2, 1], [-2, -1], [-2, 1]], jump: true, hadFirstMove: false},
-    pawn: {coordinates: [[0, 1]], jump: false, hadFirstMove: false}, // diagonal missing + first move oustanding
-    queen: {coordinates: [[-7, 7], [7, 7], [-7, 0], [7, 0], [0, 7]], jump: false, hadFirstMove: false},
-    rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], jump: false, hadFirstMove: false}, // castle outstanding
+    //jump - can jump over other pieces
+    bishop: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7]], jump: false, unidirectional: false, hadFirstMove: false},
+    king: {coordinates: [[-1, 1], [1, 1], [-1, 0], [0, 1], [0, 1]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
+    knight: {coordinates: [[2, -1], [2, 1], [-2, -1], [-2, 1], [-1, 2], [1, 2], [-1, -2], [1, -2]], jump: true, unidirectional: false, hadFirstMove: false},
+    pawn: {coordinates: [[0, 1]], jump: false, unidirectional: true, hadFirstMove: false}, // diagonal missing + first move oustanding
+    queen: {coordinates: [[-7, 7], [7, 7], [-7, 0], [7, 0], [0, 7]], jump: false, unidirectional: false, hadFirstMove: false},
+    rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
 
-    //bottom lefthand corner are coordinates x = 0, y = 0;
+    //top lefthand corner are coordinates x = 0, y = 0;
     //coordinates for player on bottom side;
     //to obtain moves for top player, multiply 8 moves by -1;
     //to add specialty (non-standard) moves;
