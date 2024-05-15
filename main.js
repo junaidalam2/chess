@@ -134,8 +134,10 @@ class Board {
         
 
 
-        if(canJump) {
-
+        if(this.pieceSelected.type == 'knight') {
+            
+            this.pieceSelected.possibleMovesKnight();
+            /*
             coordinatesArray.forEach((element) => {
                 //console.log(coordinatesArray);
           
@@ -161,6 +163,7 @@ class Board {
                     } 
 
             });
+            */
 
             //console.table(this.possibleMovesArray);
 
@@ -344,7 +347,38 @@ class Pieces {
         //console.log(board.boardArray);
     }
 
+    possibleMovesKnight() {
+        
+        if(this.type != 'knight') return
 
+        let coordinatesArray = this.moves.coordinates;
+        let occupiedSamePlayer = this.color.charAt(0);
+
+        coordinatesArray.forEach((element) => {
+            //console.log(coordinatesArray);
+            
+            let xCoordinate = this.position[0] + element[0];
+            let yCoordinate = this.position[1] + element[1];
+            
+                //console.log(yCoordinate, xCoordinate)
+                //console.log("-------");
+                //console.log(yCoordinate, xCoordinate);
+
+                if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
+                    yCoordinate < 0 || yCoordinate >= boardDimensions) {
+                        return;
+                } 
+
+                if(board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
+                    board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                }
+                
+
+        });
+
+        //console.table(board.possibleMovesArray);
+
+    }
 
     
 }
