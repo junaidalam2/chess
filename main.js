@@ -128,7 +128,7 @@ class Board {
     possibleMoves() {
 
         let coordinatesArray = this.pieceSelected.moves.coordinates;
-        let canJump = this.pieceSelected.moves.jump;
+        //let canJump = this.pieceSelected.moves.jump;
         let currentPosition = this.pieceSelected.position;
         let unidirectionalFactor = this.unidirectionalFactor();
         
@@ -166,6 +166,12 @@ class Board {
             */
 
             //console.table(this.possibleMovesArray);
+
+        } else if (this.pieceSelected.type == 'bishop' || this.pieceSelected.type == 'rook' || this.pieceSelected.type == 'queen') {
+
+
+            this.pieceSelected.possibleMovesVanilla();
+
 
         } else {
 
@@ -372,15 +378,91 @@ class Pieces {
                 if(board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
                     board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
                 }
+
+        });
+        //console.table(board.possibleMovesArray);
+    }
+
+    possibleMovesVanilla() {
+
+        //work in process
+
+        let coordinatesArray = this.moves.coordinates;
+        let occupiedSamePlayer = this.color.charAt(0);
+
+
+        coordinatesArray.forEach((element) => {
+               
+            console.log(element)
+            //console.log("unidirectionalFactor:", unidirectionalFactor);
+            //let yMove  = element[1] //* unidirectionalFactor;
+            console.log(element)
+            
+            let exitFlag = 0;
+            let xDirection = element[0] == 0 ? 0 : element[0] / Math.abs(element[0]);
+            let yDirection = element[1] == 0 ? 0 : element[1] / Math.abs(element[1]);
+            let xCoordinate = this.position[0];
+            let yCoordinate = this.position[1];
+            
+            //let occupiedSamePlayer = this.pieceSelected.color.charAt(0);
+            let occupiedOtherPlayerCounter = 0;
+
+            let xMax = element[0] == 0 ? boardDimensions - 1 : Math.abs(element[0]);
+            let yMax = element[1] == 0 ? boardDimensions - 1 : Math.abs(element[1]);
+            let xCounter = 0;
+            let yCounter = 0;
+
+            do {
+
+                console.log("x:", xCoordinate, "y:", yCoordinate)
+                console.log(element)
+                console.log("x:", element[0], "y:", element[1])
+                console.log("-------")
                 
+                xCoordinate = xCoordinate + xDirection;
+                yCoordinate = yCoordinate + yDirection;
+
+                console.log("x:", xCoordinate, "y:", yCoordinate)
+
+                if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
+                    yCoordinate < 0 || yCoordinate >= boardDimensions) {
+                        console.log('offboard')
+                        return;
+                } 
+                
+                if(board.boardArray[yCoordinate][xCoordinate] == occupiedSamePlayer ||
+                    occupiedOtherPlayerCounter > 1 || xCounter >= xMax || yCounter >= yMax) {
+                        console.log('occupiedSamePlayer: ', board.boardArray[yCoordinate][xCoordinate], yCoordinate, xCoordinate, board.boardArray[yCoordinate][xCoordinate] == occupiedSamePlayer)
+                        console.log('occupiedOtherPlayerCounter: ', occupiedOtherPlayerCounter)
+                        console.log('xCounter > xMax: ', xCounter, xMax)
+                        console.log('yCounter > yMax: ', yCounter, yMax)
+                        exitFlag = 1;
+                } else {
+
+                    console.log('this.boardArray[yCoordinate][xCoordinate]', board.boardArray[yCoordinate][xCoordinate])
+                    console.log('this.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer', board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer)
+                    if(board.boardArray[yCoordinate][xCoordinate] &&
+                        board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
+                            occupiedOtherPlayerCounter++;
+                            console.log('occupiedOtherPlayerCounter', occupiedOtherPlayerCounter)
+                    }
+                    
+                    if( occupiedOtherPlayerCounter < 2 ) {
+                        board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                    }
+                }
+
+                xCounter++;
+                yCounter++;
+
+            } while (!exitFlag);
 
         });
 
-        //console.table(board.possibleMovesArray);
+        console.table(board.possibleMovesArray);
 
-    }
+    } 
 
-    
 }
 
 
