@@ -4,9 +4,17 @@ export const scaleFactor = 80;
 export const gridWidth = 1;
 export const gameboardColor = 'LightCyan';
 export const selectedSquareColor = '#d3dee0';
+export const possibleMovesColor = '#ff03ea';
 export const gridLineColor = 'gray';
 export const gridLineCursor = 'blue';
 export const mousePositionOffset = {x: 6, y: 6};
+
+
+//players
+export const topPlayerName = 'black';
+export const bottomPlayerName = 'white';
+export const topPlayerNotation = topPlayerName.charAt(0);;
+export const bottomPlayerNotation = bottomPlayerName.charAt(0);;
 
 
 //pieces
@@ -38,26 +46,39 @@ function generatePieceCount() {
 }
 
 export let pieceCountArray = generatePieceCount();
+
+const specialFirstMove = {
+    pawn: {coordinates: [[0, 2]]},
+    king: {coordinates: [[2, 0], [-2, 0]]},
+    rook: {coordinates: [[-2, 0], [3, 0]]}
+}
+
+const differentAttackMove = {
+    pawn: {coordinates: [[1, 1], [-1, 1]]},
+}
+
+
 export const moves = {
 
-    //jump - can jump over other pieces
-    bishop: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7]], jump: false, unidirectional: false, hadFirstMove: false},
-    king: {coordinates: [[-1, 1], [1, 1], [1, -1], [-1, -1], [-1, 0], [1, 0], [0, 1], [0, -1]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
-    knight: {coordinates: [[2, -1], [2, 1], [-2, -1], [-2, 1], [-1, 2], [1, 2], [-1, -2], [1, -2]], jump: true, unidirectional: false, hadFirstMove: false},
-    pawn: {coordinates: [[0, 1]], jump: false, unidirectional: true, hadFirstMove: false}, // diagonal missing + first move oustanding
-    queen: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7], [-7, 0], [7, 0], [0, 7], [0, -7]], jump: false, unidirectional: false, hadFirstMove: false},
-    rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], jump: false, unidirectional: false, hadFirstMove: false}, // castle outstanding
+    bishop: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7]], unidirectional: false, hadFirstMove: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null, subjectToEnPassant: false, subjectToCastle: false, canPromote: false},
+    king: {coordinates: [[-1, 1], [1, 1], [1, -1], [-1, -1], [-1, 0], [1, 0], [0, 1], [0, -1]], unidirectional: false, hadFirstMove: false, hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.king.coordinates, differentAttack: false, differentAttackMoveCoordiates: null, subjectToEnPassant: false, subjectToCastle: true, canPromote: false}, // castle outstanding
+    knight: {coordinates: [[2, -1], [2, 1], [-2, -1], [-2, 1], [-1, 2], [1, 2], [-1, -2], [1, -2]], unidirectional: false, hadFirstMove: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null, subjectToEnPassant: false, subjectToCastle: false, canPromote: false},
+    pawn: {coordinates: [[0, 1]], unidirectional: true, hadFirstMove: false,  hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.pawn.coordinates, differentAttack: true, differentAttackMoveCoordiates: differentAttackMove.pawn.coordinates,subjectToEnPassant: false, subjectToCastle: false, canPromote: false}, // diagonal missing + first move oustanding
+    queen: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7], [-7, 0], [7, 0], [0, 7], [0, -7]], unidirectional: false, hadFirstMove: false}, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null,subjectToEnPassant: false, subjectToCastle: false, canPromote: false,
+    rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], unidirectional: false, hadFirstMove: false, hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.rook.coordinates, differentAttack: false, differentAttackMoveCoordiates: null,subjectToEnPassant: false, subjectToCastle: true, canPromote: false}, // castle outstanding
 
     //top lefthand corner are coordinates x = 0, y = 0;
     //coordinates for player on bottom side;
-    //to add specialty (non-standard) moves;
-    // pawn - 2 moves on first 
-    // pawn - kill enemeny on diagonal only, no killing directly
     // pawn - en passant
-    // king + rook - castling
+    // king + rook - castling - need to ensure not in check before and after move
+    // king - don't move into check
     // promote pawn to other pieces (doesn't need to be a captured piece) 
 
 } 
+
+
+
+
 
 // images - source: https://commons.wikimedia.org/wiki/Category:PNG_chess_pieces/Standard_transparent;
 export const pieceImages = {
