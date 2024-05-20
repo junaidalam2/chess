@@ -150,18 +150,39 @@ class Board {
     }
 
 
+    checkPlayerTurn() {
+        return whitePlayer.turn ? whitePlayer : blackPlayer;
+    }
+
+    changePlayerturn() {
+
+        if(whitePlayer.turn) {
+            blackPlayer.turn = true
+            whitePlayer.turn = false
+        } else {
+            blackPlayer.turn = false
+            whitePlayer.turn = true
+        }
+
+    }
+
+
     clickListener() {
         if(this.mouseGridPosition.x != null && this.mouseGridPosition.y != null) {   
                 this.mouseSquareSelected.x = this.mouseGridPosition.x;
                 this.mouseSquareSelected.y = this.mouseGridPosition.y;
             
+            //selecting a piece when no piece originally selected
             if(!this.pieceSelected) {
-                this.findPieceSelected(whitePlayer);
+                
+                let player = this.checkPlayerTurn();
+                this.findPieceSelected(player);
                 //console.log(this.pieceSelected);
                 this.possibleMoves();
                 this.drawPossibleMovesGrid();
                 
             
+            //unselecting a piece that was originally selected
             } else if (this.pieceSelected.position[0] == this.mouseSquareSelected.x &&
                 this.pieceSelected.position[1] == this.mouseSquareSelected.y) {
                     this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
@@ -178,25 +199,32 @@ class Board {
             
             } else if (this.pieceSelected) {
                 
+                //selecting the destination square when no destination square originally selected
                 if (this.desiredPieceSquare.x != null && this.desiredPieceSquare.y != null) {
                     this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gameboardColor);
                     this.drawGridLinesBox(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gridLineColor);
                 }
                 
+                //second click on the destination square leading to a moved piece
                 if(this.boardArray[this.mouseSquareSelected.y][this.mouseSquareSelected.x] == 0) {
                     if(this.desiredPieceSquare.x == this.mouseSquareSelected.x && 
                         this.desiredPieceSquare.y == this.mouseSquareSelected.y) {
                             this.fillSquareBackground(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = 0;
-                            this.pieceSelected.position[0] = this.desiredPieceSquare.x;
-                            this.pieceSelected.position[1] = this.desiredPieceSquare.y;
+                            this.pieceSelected.position = [this.desiredPieceSquare.x, this.desiredPieceSquare.y];
+                            this.pieceSelected.moves.hadFirstMove = true;
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = this.pieceSelected.color.charAt(0);
                             this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
                             this.desiredPieceSquare.x = null;
                             this.desiredPieceSquare.y = null;
+                            
                             this.pieceSelected = null;
                             this.possibleMovesArray = this.createArray();
-                    } else { 
+                            this.changePlayerturn();
+                    } 
+                    
+                    //changing the destination square when a destination square was previously selected
+                    else { 
                             this.desiredPieceSquare.x = this.mouseSquareSelected.x;
                             this.desiredPieceSquare.y = this.mouseSquareSelected.y;
                             this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, selectedSquareColor);
@@ -412,14 +440,14 @@ class Pieces {
     checkCastleSideSquares(side) {
 
         let counter = side == 'right' ? boardDimensions - this.position[0] - 1 : this.position[0];
-        let XCoordinate = this.position[0];
+        let xCoordinate = this.position[0];
 
         do {
 
-            XCoordinate = side == 'right' ? XCoordinate += 1: XCoordinate -= 1;
-            counter--;
+            xCoordinate = side == 'right' ? xCoordinate += 1: xCoordinate -= 1;
+            counter -=1;
 
-        } while (counter > 0 && !board.boardArray[this.position[1]][XCoordinate]);
+        } while (counter > 0 && !board.boardArray[this.position[1]][xCoordinate]);
 
         return !counter
     }
@@ -427,37 +455,36 @@ class Pieces {
 
     possibleMovesPawn() {
 
-        if(this.type != 'pawn') return
+        if(this.type != 'pawn') return;
 
         let coordinatesArray = this.moves.coordinates;
         let occupiedSamePlayer = this.color.charAt(0);
-        let unidirectionalFactor = this.moves.unidirectional && occupiedSamePlayer == 'w' ? -1 : 1;
+        let unidirectionalFactor = this.moves.unidirectional && occupiedSamePlayer == bottomPlayerNotation ? -1 : 1;
         
         coordinatesArray.forEach((element) => {
-            this.evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, false, false)
+            this.evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, false, false);
         }); 
 
        if(this.moves.hasSpecialFirstMove && !this.moves.hadFirstMove) {
-            let specialFirstMoveArray = this.moves.specialFirstMoveCoordinates
+            let specialFirstMoveArray = this.moves.specialFirstMoveCoordinates;
             specialFirstMoveArray.forEach((element) => {
                 this.evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, false, false);
             });
         }
 
        if(this.moves.differentAttack) {
-            let attackMoveArray = this.moves.differentAttackMoveCoordiates
+            let attackMoveArray = this.moves.differentAttackMoveCoordiates;
             attackMoveArray.forEach((element) => {
                 this.evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, true, true);
             });
         }
-
     }
-
 
     evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, canAttack, onlyAttack) {
 
-        let attackCondition = canAttack? 1 : 0
-        let occupiedOpposingPlayer = occupiedSamePlayer == this.color.charAt(0) ? topPlayerNotation : bottomPlayerNotation
+        let attackCondition = canAttack? 1 : 0;
+        let occupiedOpposingPlayer = this.findOpposingPlayerNotation();
+        let attackOpposingPlayer = false;
         //console.log(occupiedOpposingPlayer)
         //console.table(board.boardArray)
         //console.log(element)
@@ -507,14 +534,15 @@ class Pieces {
                 //console.log('this.boardArray[yCoordinate][xCoordinate]', board.boardArray[yCoordinate][xCoordinate])
                 //console.log('this.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer', board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer)
                 if(board.boardArray[yCoordinate][xCoordinate] &&
-                    board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer /*!= occupiedSamePlayer*/) {
-                        occupiedOtherPlayerCounter++;
+                    board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer) {
+                        occupiedOtherPlayerCounter += 1;
+                        attackOpposingPlayer = true;
                         //console.log('occupiedOtherPlayerCounter', occupiedOtherPlayerCounter)
                 }
 
                 //console.log(onlyAttack, board.boardArray[yCoordinate][xCoordinate], occupiedOpposingPlayer)
                 if(onlyAttack && board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer) {
-                    console.log('condition met')
+                    //console.log('condition met')
                     board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
                 } else if (!onlyAttack && occupiedOtherPlayerCounter < attackCondition + 1 ) {
                     board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
@@ -527,6 +555,11 @@ class Pieces {
         } while (!exitFlag);
 
     }
+
+    findOpposingPlayerNotation() {
+        if(whitePlayer.turn) return topPlayerNotation
+        return bottomPlayerNotation
+    }    
 
 
 }
@@ -545,7 +578,8 @@ function setupPieces(color) {
 
     pieceNamesArray.forEach((element, index) => {
         for(let i = 0; i < pieceCountArray[index]; i++) {
-            const piece = new Pieces(element, moves[element], color, pieceImages[element][color], startingPosition[element][color][i]);
+            let movesClone = {...moves[element]}
+            const piece = new Pieces(element, movesClone, color, pieceImages[element][color], startingPosition[element][color][i]);
             pieceInstanceArray.push(piece);
         }
     });
