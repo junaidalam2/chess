@@ -125,7 +125,7 @@ class Board {
     
     unidirectionalFactor() {
 
-        if(this.pieceSelected.moves.unidirectional && this.pieceSelected.color.charAt(0) == 'w') {
+        if(this.pieceSelected.moves.unidirectional && this.pieceSelected.color.charAt(0) == bottomPlayerNotation) {
             return -1
         }
         return 1
@@ -380,16 +380,16 @@ class Pieces {
 
     checkCastleConditions() {
 
-        if(this.type != 'king') return
-        if(this.moves.hadFirstMove) return
+        if(this.type != 'king') return;
+        if(this.moves.hadFirstMove) return;
 
         let rightSquareClear = this.checkCastleSideSquares('right');
         let leftSquareClear = this.checkCastleSideSquares('left');
 
         if(!rightSquareClear && !leftSquareClear) return;
         
-        let rightRookCoordinates = [[this.position[0] + 3], [this.position[1]]]
-        let leftRookCoordinates = [[this.position[0] - 4], [this.position[1]]]
+        let rightRookCoordinates = [[this.position[0] + 3], [this.position[1]]];
+        let leftRookCoordinates = [[this.position[0] - 4], [this.position[1]]];
         
         let rightRook = null;
         let leftRook = null;
@@ -398,13 +398,13 @@ class Pieces {
             if(rightSquareClear && element.position[0] == rightRookCoordinates[0] && element.position[1] == rightRookCoordinates[1] && element.type == 'rook' && !element.moves.hadFirstMove) {
                 rightRook = element;
                 board.possibleMovesArray[element.position[1]][element.position[0] - 1] = 1;
-            }
+            };
             
             if(leftSquareClear && element.position[0] == leftRookCoordinates[0] && element.position[1] == leftRookCoordinates[1] && element.type == 'rook' && !element.moves.hadFirstMove) {
                 leftRook = element;
                 board.possibleMovesArray[element.position[1]][element.position[0] + 1] = 1;
-            }
-        })
+            };
+        });
 
     }
 
@@ -437,7 +437,6 @@ class Pieces {
             this.evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, false, false)
         }); 
 
-        
        if(this.moves.hasSpecialFirstMove && !this.moves.hadFirstMove) {
             let specialFirstMoveArray = this.moves.specialFirstMoveCoordinates
             specialFirstMoveArray.forEach((element) => {
