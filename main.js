@@ -1,7 +1,16 @@
 
 /*
 TODO:
+-complete moves for each piece + scoring
+-clean up moves object in constants.js
+-add winning and draw conditions
 -create a session class that can create instances of the other relevant classes
+-investigate min-max
+-authentication
+-database for wins, losses, draws, scores
+-sound for clicks, win, loss, draw
+-visualization - taken pieces, scores, volume 
+-vu
 
 */
 
@@ -41,12 +50,15 @@ class Board {
     constructor(boardDimensions, scaleFactor) {
         this.dimensions = boardDimensions;
         this.scaleFactor = scaleFactor;
-        this.boardArray = this.createArray();
-        this.possibleMovesArray = this.createArray();
         this.mouseGridPosition = {x: null, y: null};
         this.mouseSquareSelected = {x: null, y: null};
         this.pieceSelected = null;
         this.desiredPieceSquare = {x: null, y: null};
+        this.rookForCastling = {left: null, right: null};
+        this.takenPiecesFromTopPlayer = [];
+        this.takenPiecesFromBottomPlayer = [];
+        this.boardArray = this.createArray();
+        this.possibleMovesArray = this.createArray();
         this.setCanvas();
         this.drawGameboard();
     }
@@ -95,8 +107,11 @@ class Board {
         this.drawGridLinesBoard();
     }
 
-    drawSquare(indexX, indexY, color) {
-        this.fillSquareBackground(indexX, indexY, color);
+    drawSquareSelectedPiece(color) {
+
+        if(!this.pieceSelected) return;
+
+        this.fillSquareBackground(this.pieceSelected.position[0],this.pieceSelected.position[1], color);
         this.pieceSelected.drawPiece();
 
     }
@@ -115,23 +130,20 @@ class Board {
                 this.mouseGridPosition.x = Math.floor( x / scaleFactor); 
                 this.mouseGridPosition.y = Math.floor( y / scaleFactor);
                 this.drawGridLinesBox(this.mouseGridPosition.x , this.mouseGridPosition.y, gridLineCursor);
-                //this. drawPossibleMovesGrid();
             } else {
             this.mouseGridPosition.x = null;
             this.mouseGridPosition.y = null;
         }
     }
 
-    
     unidirectionalFactor() {
 
-        if(this.pieceSelected.moves.unidirectional && this.pieceSelected.color.charAt(0) == bottomPlayerNotation) {
-            return -1
+        if(this.pieceSelected.moves.unidirectional 
+            && this.pieceSelected.color.charAt(0) == bottomPlayerNotation) {
+                return -1;
         }
-        return 1
-
+        return 1;
     }
-
 
     possibleMoves() {
 
@@ -144,11 +156,12 @@ class Board {
             case 'pawn':
                 this.pieceSelected.possibleMovesPawn();
                 break;
+            case 'king':
+                this.pieceSelected.checkCastleConditions();
             default:
                 this.pieceSelected.possibleMovesDefault();
         }
     }
-
 
     checkPlayerTurn() {
         return whitePlayer.turn ? whitePlayer : blackPlayer;
@@ -157,15 +170,13 @@ class Board {
     changePlayerturn() {
 
         if(whitePlayer.turn) {
-            blackPlayer.turn = true
-            whitePlayer.turn = false
+            blackPlayer.turn = true;
+            whitePlayer.turn = false;
         } else {
-            blackPlayer.turn = false
-            whitePlayer.turn = true
+            blackPlayer.turn = false;
+            whitePlayer.turn = true;
         }
-
     }
-
 
     clickListener() {
         if(this.mouseGridPosition.x != null && this.mouseGridPosition.y != null) {   
@@ -176,60 +187,62 @@ class Board {
             if(!this.pieceSelected) {
                 
                 let player = this.checkPlayerTurn();
-                this.findPieceSelected(player);
-                //console.log(this.pieceSelected);
+                //this.pieceSelected = this.findPiecebyPosition(player, this.mouseSquareSelected.x, this.mouseSquareSelected.y);
+                //let index = this.findPiecebyPosition(player, this.mouseSquareSelected.x, this.mouseSquareSelected.y)
+                //this.pieceSelected = player.pieces[index];
+                this.findPieceSelected(player)
+                this.drawSquareSelectedPiece(selectedSquareColor); //-->
                 this.possibleMoves();
                 this.drawPossibleMovesGrid();
                 
-            
             //unselecting a piece that was originally selected
             } else if (this.pieceSelected.position[0] == this.mouseSquareSelected.x &&
                 this.pieceSelected.position[1] == this.mouseSquareSelected.y) {
-                    this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
+                    this.drawSquareSelectedPiece(gameboardColor);
                     this.pieceSelected = null;
                     
                     if(this.desiredPieceSquare.x != null && this.desiredPieceSquare.y != null) {
                         this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gameboardColor);
-                        //this.drawGridLinesBox(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gridLineColor);
                     }
                     
-                    //this.desiredPieceSquare.x = null;
-                    //this.desiredPieceSquare.y = null;
                     this.desiredPieceSquare = {x: null, y: null};
                     this.possibleMovesArray = this.createArray();
+                    this.unselectRookforCastling();
                     this.drawGridLinesBoard();
                     this.drawPossibleMovesGrid();
             
             } else if (this.pieceSelected) {
                 
-                //selecting the destination square when no destination square originally selected
+                //draw background after second click on  destination square
                 if (this.desiredPieceSquare.x != null && this.desiredPieceSquare.y != null) {
                     this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gameboardColor);
                     this.drawGridLinesBox(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gridLineColor);
                 }
                 
                 //second click on the destination square leading to a moved piece
-                if(this.boardArray[this.mouseSquareSelected.y][this.mouseSquareSelected.x] == 0) {
+                if(this.boardArray[this.mouseSquareSelected.y][this.mouseSquareSelected.x] == 0 
+                    || this.boardArray[this.mouseSquareSelected.y][this.mouseSquareSelected.x] == this.findOpposingPlayerNotation()) {
+                    
                     if(this.desiredPieceSquare.x == this.mouseSquareSelected.x && 
                         this.desiredPieceSquare.y == this.mouseSquareSelected.y) {
                             this.fillSquareBackground(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = 0;
                             this.pieceSelected.position = [this.desiredPieceSquare.x, this.desiredPieceSquare.y];
+                            this.checkDestinationSquareforOpposingPiece(this.desiredPieceSquare.x, this.desiredPieceSquare.y);
                             this.pieceSelected.moves.hadFirstMove = true;
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = this.pieceSelected.color.charAt(0);
-                            this.drawSquare(this.pieceSelected.position[0], this.pieceSelected.position[1], gameboardColor);
-                            //this.desiredPieceSquare.x = null;
-                            //this.desiredPieceSquare.y = null;
+                            this.checkIfKingCastled();
+                            this.unselectRookforCastling();
+                            this.drawSquareSelectedPiece(gameboardColor);
                             this.desiredPieceSquare = {x: null, y: null};
                             this.pieceSelected = null;
                             this.possibleMovesArray = this.createArray();
                             this.changePlayerturn();
+                            console.table(this.boardArray);
                     } 
                     
-                    //changing the destination square when a destination square was previously selected
+                    //initial click on destination square
                     else { 
-                            //this.desiredPieceSquare.x = this.mouseSquareSelected.x;
-                            //this.desiredPieceSquare.y = this.mouseSquareSelected.y;
                             this.desiredPieceSquare = {x: this.mouseSquareSelected.x, y: this.mouseSquareSelected.y};
                             this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, selectedSquareColor);
                     }
@@ -238,16 +251,126 @@ class Board {
         }
     }
 
-    findPieceSelected(player) {
-        player.pieces.forEach((element) => {
-            if(element.position[0] == this.mouseSquareSelected.x && element.position[1] == this.mouseSquareSelected.y) {
-                this.pieceSelected = element;
-                //console.log(element)
-                this.drawSquare(element.position[0],element.position[1], selectedSquareColor);
-            }
-       })
+    checkIfKingCastled(){
+
+
+        //console.log('this.pieceSelected.type', this.pieceSelected.type)
+        if(this.pieceSelected.type != 'king') return;
+
+        let kingStartingPositionXCoordinate = startingPosition.king.black[0][0];
+        //console.log('kingStartingPositionXCoordinate', kingStartingPositionXCoordinate)
+        let rightKingXCoordinate = this.pieceSelected.moves.specialFirstMoveCoordinates[0][0] + kingStartingPositionXCoordinate;
+        
+        let leftKingXCoordinate = this.pieceSelected.moves.specialFirstMoveCoordinates[1][0] + kingStartingPositionXCoordinate;
+        //console.log('this.pieceSelected.moves.specialFirstMoveCoordinates[1][0]', this.pieceSelected.moves.specialFirstMoveCoordinates[1][0])
+        
+        //console.log('left', this.rookForCastling.left)
+        //console.log('x position', this.pieceSelected.position[0])
+        //console.log('leftKingXCoordinate', leftKingXCoordinate)
+
+        if(this.rookForCastling.left && this.pieceSelected.position[0] == leftKingXCoordinate) {
+            //console.log('condition met left')
+            this.moveRook('left');
+            return;
+        } else if (this.rookForCastling.right && this.pieceSelected.position[0] == rightKingXCoordinate) {
+            //console.log('condition met right')
+            this.moveRook('right');
+            return;
+        }
     }
 
+    moveRook(side) {
+
+        if(side == 'left') {
+            this.boardArray[this.rookForCastling.left.position[1]][this.rookForCastling.left.position[0]] = 0;
+            this.fillSquareBackground(this.rookForCastling.left.position[0], this.rookForCastling.left.position[1], gameboardColor);
+            let leftRookMove = this.rookForCastling.left.moves.specialFirstMoveCoordinates[1][0];
+            this.rookForCastling.left.position[0] += leftRookMove;
+            this.boardArray[this.rookForCastling.left.position[1]][this.rookForCastling.left.position[0]] = this.rookForCastling.left.color.charAt(0);
+            this.rookForCastling.left.drawPiece();
+        } else {
+            this.boardArray[this.rookForCastling.right.position[1]][this.rookForCastling.right.position[0]] = 0;
+            this.fillSquareBackground(this.rookForCastling.right.position[0], this.rookForCastling.right.position[1], gameboardColor);
+            let rightRookMove = this.rookForCastling.right.moves.specialFirstMoveCoordinates[0][0];
+            this.rookForCastling.right.position[0] += rightRookMove;
+            this.boardArray[this.rookForCastling.right.position[1]][this.rookForCastling.right.position[0]] = this.rookForCastling.right.color.charAt(0);
+            this.rookForCastling.right.drawPiece();
+        }
+    }
+    
+    unselectRookforCastling() {
+        this.rookForCastling.right = null;
+        this.rookForCastling.left = null;
+    }
+
+    
+    findOpposingPlayerNotation() {
+        if(whitePlayer.turn) return topPlayerNotation
+        return bottomPlayerNotation
+    }    
+
+    /*
+    findPiecebyPosition(player, xCoordinate, yCoordinate) {
+
+        //let selectedPiece = null;
+        let arrayIndex;
+
+        player.pieces.forEach((piece, index) => {
+            if(piece.position[0] == xCoordinate && piece.position[1] == yCoordinate) {
+                //selectedPiece = piece;
+                //console.log('-->')
+                //console.log(selectedPiece)
+                arrayIndex = index;
+            };
+        });
+        
+        //console.log(selectedPiece)
+        //return selectedPiece;
+        console.log(arrayIndex)
+        return arrayIndex;
+    }*/
+    
+
+    findPieceSelected(player) {
+        player.pieces.forEach((piece) => {
+            if(piece.position[0] == this.mouseSquareSelected.x && piece.position[1] == this.mouseSquareSelected.y) {
+                this.pieceSelected = piece;
+                //this.drawSquare(this.pieceSelected.position[0],this.pieceSelected.position[1], selectedSquareColor);
+                return;
+            }
+        })
+    }
+
+
+    checkDestinationSquareforOpposingPiece(xCoordinate, yCoordinate) {
+        
+        let player = whitePlayer.turn ? blackPlayer : whitePlayer; 
+        let takenPiecesArray = player == whitePlayer ? this.takenPiecesFromBottomPlayer : this.takenPiecesFromTopPlayer;
+        //let pieceFound
+        // let index = this.findPiecebyPosition(player, xCoordinate, yCoordinate)
+        //console.log('--')
+        //console.log(pieceFound)
+        // let piece = player.pieces[index]; 
+        // console.log(index);
+        // console.log(piece)
+
+        // piece.position = [null, null]
+        //pieceFound.position = [null, null]
+        // takenPiecesArray.push(player.pieces[index]);
+
+        
+        player.pieces.forEach((piece) => {
+            if(piece.position[0] == xCoordinate && piece.position[1] == yCoordinate) {
+                piece.position = [null, null]
+                takenPiecesArray.push(piece);
+                return;
+            }
+       })
+
+       console.log('this.takenPiecesFromBottomPlayer', this.takenPiecesFromBottomPlayer)
+       console.log('this.takenPiecesFromTopPlayer', this.takenPiecesFromTopPlayer)
+
+    }
 
     drawPossibleMovesGrid() {
         this.possibleMovesArray.forEach((row, indexY) => {
@@ -280,7 +403,7 @@ class Pieces {
         this.color = color;
         this.imagePath = imagePath;
         this.position = position;
-        this.active = true;
+        //this.active = true;
         this.drawPiece();
     }
 
@@ -403,7 +526,7 @@ class Pieces {
            
         });
         
-        this.checkCastleConditions();
+        //this.checkCastleConditions();
         console.table(board.possibleMovesArray);
         
     }
@@ -421,22 +544,20 @@ class Pieces {
         let rightRookCoordinates = [[this.position[0] + 3], [this.position[1]]];
         let leftRookCoordinates = [[this.position[0] - 4], [this.position[1]]];
         let player = board.checkPlayerTurn();
-        let rightRook = null;
-        let leftRook = null;
 
-        player.pieces.forEach((element) => {
-            if(rightSquareClear && element.position[0] == rightRookCoordinates[0] 
-                && element.position[1] == rightRookCoordinates[1] 
-                && element.type == 'rook' && !element.moves.hadFirstMove) {
-                    rightRook = element;
-                    board.possibleMovesArray[element.position[1]][element.position[0] - 1] = 1;
+        player.pieces.forEach((piece) => {
+            if(rightSquareClear && piece.position[0] == rightRookCoordinates[0] 
+                && piece.position[1] == rightRookCoordinates[1] 
+                && piece.type == 'rook' && !piece.moves.hadFirstMove) {
+                    board.rookForCastling.right = piece;
+                    board.possibleMovesArray[piece.position[1]][piece.position[0] - 1] = 1;
             };
             
-            if(leftSquareClear && element.position[0] == leftRookCoordinates[0] 
-                && element.position[1] == leftRookCoordinates[1] && 
-                element.type == 'rook' && !element.moves.hadFirstMove) {
-                    leftRook = element;
-                    board.possibleMovesArray[element.position[1]][element.position[0] + 1] = 1;
+            if(leftSquareClear && piece.position[0] == leftRookCoordinates[0] 
+                && piece.position[1] == leftRookCoordinates[1] 
+                && piece.type == 'rook' && !piece.moves.hadFirstMove) {
+                    board.rookForCastling.left = piece;
+                    board.possibleMovesArray[piece.position[1]][piece.position[0] + 2] = 1;
             };
         });
     }
@@ -484,7 +605,7 @@ class Pieces {
     evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, canAttack, onlyAttack) {
 
         let attackCondition = canAttack? 1 : 0;
-        let occupiedOpposingPlayer = this.findOpposingPlayerNotation();
+        let occupiedOpposingPlayer = board.findOpposingPlayerNotation();
         //let attackOpposingPlayer = false;
         //console.log(occupiedOpposingPlayer)
         //console.table(board.boardArray)
@@ -560,10 +681,11 @@ class Pieces {
 
     }
 
+    /*
     findOpposingPlayerNotation() {
         if(whitePlayer.turn) return topPlayerNotation
         return bottomPlayerNotation
-    }    
+    }*/    
 }
 
 
