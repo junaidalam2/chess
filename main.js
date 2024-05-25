@@ -166,6 +166,15 @@ class Board {
 
     findPossibleCheck() {
 
+        this.findOpposingPlayerAttack();
+        this.adjustPossibleMovesForPossibleCheck();
+        this.assessPossibleAttackForPossibleCheck();
+
+    }
+
+
+    findOpposingPlayerAttack() {
+
         if(!this.pieceSelected || this.pieceSelected.type != 'king') return;
 
         let player = this.findOpposingPlayer();
@@ -179,6 +188,49 @@ class Board {
         console.log('opposingPlayerPossibleAttackArray')
         console.table(this.opposingPlayerPossibleAttackArray);
 
+    }
+
+    adjustPossibleMovesForPossibleCheck() {
+
+        if(!this.pieceSelected || this.pieceSelected.type != 'king') return;
+
+        this.possibleMovesArray.forEach((row, indexY) => {
+            row.forEach((square, indexX) => {
+                if(this.opposingPlayerPossibleAttackArray[indexY][indexX] == 1) {
+                    this.possibleMovesArray[indexY][indexX] = 0;
+                };
+            });
+        });
+
+        console.log('this.possibleMovesArray after check')
+        console.table(this.possibleMovesArray)
+    }
+
+    assessPossibleAttackForPossibleCheck() { 
+
+        if(!this.pieceSelected || this.pieceSelected.type != 'king') return;
+        
+        this.opposingPlayerPossibleAttackArray = this.createArray();
+        let coordinatesArray = this.pieceSelected.moves.coordinates;
+        let occupiedOpposingPlayer = this.findOpposingPlayerNotation();
+        let kingXCoordinate = this.pieceSelected.position[0];
+        let kingYCoordinate = this.pieceSelected.position[1];
+
+        coordinatesArray.forEach((coordinates) => {
+            kingXCoordinate += coordinates[0];
+            kingYCoordinate += coordinates[1];
+
+            if(!this.pieceSelected.checkOffboard(kingXCoordinate, kingYCoordinate) 
+                && this.boardArray[kingYCoordinate][kingXCoordinate] == occupiedOpposingPlayer) {
+
+                    this.boardArray[kingYCoordinate][kingXCoordinate] = 0;
+                    this.findPossibleCheck();
+                    this.adjustPossibleMovesForPossibleCheck();
+                    this.boardArray[kingYCoordinate][kingXCoordinate] = occupiedOpposingPlayer;
+            };
+            kingXCoordinate = this.pieceSelected.position[0];
+            kingYCoordinate = this.pieceSelected.position[1];
+        });
     }
 
     checkPlayerTurn() {
@@ -216,6 +268,8 @@ class Board {
                 this.drawSquareSelectedPiece(selectedSquareColor); //-->
                 this.possibleMoves(this.pieceSelected, board.possibleMovesArray, false);
                 this.findPossibleCheck();
+                //this.adjustPossibleMovesForPossibleCheck();
+                //this.assessPossibleAttackForPossibleCheck();
                 this.drawPossibleMovesGrid();
                 
             //unselecting a piece that was originally selected
@@ -366,7 +420,6 @@ class Board {
             }
         })
     }
-
 
     checkDestinationSquareforOpposingPiece(xCoordinate, yCoordinate) {
         
@@ -546,11 +599,6 @@ class Pieces {
 
         return !counter
     }
-
-   
-
-
-
 
     possibleMovesPawn(possibleMovesArray, assessCheck) {
 

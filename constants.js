@@ -71,7 +71,6 @@ export const moves = {
     //coordinates for player on bottom side;
     // pawn - en passant
     // king + rook - castling - need to ensure not in check before and after move
-    // king - don't move into check
     // promote pawn to other pieces (doesn't need to be a captured piece) 
 
 } 
