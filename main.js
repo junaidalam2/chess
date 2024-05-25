@@ -295,16 +295,16 @@ class Board {
 
         if(this.rookForCastling.left && this.pieceSelected.position[0] == leftKingXCoordinate) {
             //console.log('condition met left')
-            this.moveRook('left');
+            this.moveRookOnCastle('left');
             return;
         } else if (this.rookForCastling.right && this.pieceSelected.position[0] == rightKingXCoordinate) {
             //console.log('condition met right')
-            this.moveRook('right');
+            this.moveRookOnCastle('right');
             return;
         }
     }
 
-    moveRook(side) {
+    moveRookOnCastle(side) {
 
         if(side == 'left') {
             this.boardArray[this.rookForCastling.left.position[1]][this.rookForCastling.left.position[0]] = 0;
@@ -560,11 +560,13 @@ class Pieces {
         let occupiedSamePlayer = this.color.charAt(0);
         let unidirectionalFactor = this.moves.unidirectional && occupiedSamePlayer == bottomPlayerNotation ? -1 : 1;
         
-        coordinatesArray.forEach((coordinates) => {
-            this.evaluateCoordinates(coordinates, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, false, false, assessCheck);
-        }); 
+        if(!assessCheck) {
+            coordinatesArray.forEach((coordinates) => {
+                this.evaluateCoordinates(coordinates, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, false, false, assessCheck);
+            }); 
+        }
 
-       if(this.moves.hasSpecialFirstMove && !this.moves.hadFirstMove) {
+       if(this.moves.hasSpecialFirstMove && !this.moves.hadFirstMove && !assessCheck) {
             let specialFirstMoveArray = this.moves.specialFirstMoveCoordinates;
             specialFirstMoveArray.forEach((coordinates) => {
                 this.evaluateCoordinates(coordinates, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, false, false, assessCheck);
@@ -648,12 +650,19 @@ class Pieces {
                 }
 
                 //console.log(onlyAttack, board.boardArray[yCoordinate][xCoordinate], occupiedOpposingPlayer)
-                if(onlyAttack && board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer) {
+                if(onlyAttack && (board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer || assessCheck)) {
                     //console.log('condition met')
+                    
                     possibleMovesArray[yCoordinate][xCoordinate] = 1;
-                } else if (!onlyAttack && occupiedOtherPlayerCounter < attackCondition + 1 && !assessCheck) {
-                    possibleMovesArray[yCoordinate][xCoordinate] = 1;
-                }
+
+
+                } else if (!onlyAttack && occupiedOtherPlayerCounter < attackCondition + 1) {
+
+                        possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                
+                } 
+
+                
             }
 
             xCounter++;
