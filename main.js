@@ -9,7 +9,7 @@ TODO:
 -authentication
 -database for wins, losses, draws, scores
 -sound for clicks, win, loss, draw
--visualization - taken pieces, scores, volume 
+-visualization - taken pieces, scores, volume, pawn promotion 
 -vu
 
 */
@@ -57,6 +57,8 @@ class Board {
         this.rookForCastling = {left: null, right: null};
         this.takenPiecesFromTopPlayer = [];
         this.takenPiecesFromBottomPlayer = [];
+        this.pawnedPiecesTopPlayer = [];
+        this.pawnedPiecesBottomPlayer = [];
         this.boardArray = this.createArray();
         this.possibleMovesArray = this.createArray();
         this.opposingPlayerPossibleAttackArray = this.createArray();
@@ -311,6 +313,7 @@ class Board {
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = this.pieceSelected.color.charAt(0);
                             this.checkIfKingCastled();
                             this.unselectRookforCastling();
+                            this.checkPawnPromotion();
                             this.drawSquareSelectedPiece(gameboardColor);
                             this.desiredPieceSquare = {x: null, y: null};
                             this.pieceSelected = null;
@@ -330,10 +333,45 @@ class Board {
         }
     }
 
+
+    checkPawnPromotion() {
+
+        if(!this.pieceSelected || this.pieceSelected.type != 'pawn') return;
+
+        let row = this.checkPlayerTurn() == whitePlayer ? 0 : boardDimensions - 1;
+
+        if(this.pieceSelected.position[1] == row) {
+
+            const pieceNameSet = new Set(pieceNamesArray);
+            pieceNameSet.delete('king');
+
+            let pieceName
+            do {
+                pieceName = prompt('Select piece to promote (type: queen, rook, bishop, knight, or pawn)');
+            } while (!pieceNameSet.has(pieceName))
+
+            let color = this.checkPlayerTurn() == whitePlayer? bottomPlayerName : topPlayerName;
+            let movesClone = {...moves[pieceName]}
+            let position = {...this.pieceSelected.position}
+            const piece = new Pieces(pieceName, movesClone, color, pieceImages[pieceName][color], position);
+        
+            if(row == 0) {
+                this.pawnedPiecesBottomPlayer.push(piece)
+            } else {
+                this.pawnedPiecesTopPlayer.push(piece)
+            }
+
+            this.pieceSelected.position[0] = null;
+            this.pieceSelected.position[1] = null;
+
+            let player = this.checkPlayerTurn(); 
+            player.pieces.push(piece);
+            this.pieceSelected = piece;
+        }
+    }
+
     checkIfKingCastled(){
 
-
-        //console.log('this.pieceSelected.type', this.pieceSelected.type)
         if(this.pieceSelected.type != 'king') return;
 
         let kingStartingPositionXCoordinate = startingPosition.king.black[0][0];
