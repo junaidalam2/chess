@@ -2,7 +2,6 @@
 /*
 TODO:
 -complete moves for each piece + scoring
--clean up moves object in constants.js
 -add winning and draw conditions
 -create a session class that can create instances of the other relevant classes
 -investigate min-max
@@ -10,7 +9,6 @@ TODO:
 -database for wins, losses, draws, scores
 -sound for clicks, win, loss, draw
 -visualization - taken pieces, scores, volume, pawn promotion 
--vu
 
 */
 
@@ -55,6 +53,7 @@ class Board {
         this.pieceSelected = null;
         this.desiredPieceSquare = {x: null, y: null};
         this.rookForCastling = {left: null, right: null};
+        this.pawnForEnPassant = {left: null, right: null};
         this.takenPiecesFromTopPlayer = [];
         this.takenPiecesFromBottomPlayer = [];
         this.pawnedPiecesTopPlayer = [];
@@ -76,14 +75,14 @@ class Board {
 
     createArray() {
         
-        let twoDimensionalArray = []
+        let twoDimensionalArray = [];
         
         for(let i = 0; i < this.dimensions; i++) {
             const rowArray = new Array(this.dimensions).fill(0);
             twoDimensionalArray.push(rowArray);
         }
 
-        return twoDimensionalArray
+        return twoDimensionalArray;
     }
 
     fillCanvasBackground() {
@@ -101,8 +100,8 @@ class Board {
         this.boardArray.forEach((row, indexY) => {
             row.forEach((square, indexX) => {
                 this.drawGridLinesBox(indexX , indexY, gridLineColor);
-            })
-        })
+            });
+        });
     }
 
     drawGameboard() {
@@ -171,7 +170,6 @@ class Board {
         this.findOpposingPlayerAttack();
         this.adjustPossibleMovesForPossibleCheck();
         this.assessPossibleAttackForPossibleCheck();
-
     }
 
 
@@ -309,12 +307,15 @@ class Board {
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = 0;
                             this.pieceSelected.position = [this.desiredPieceSquare.x, this.desiredPieceSquare.y];
                             this.checkDestinationSquareforOpposingPiece(this.desiredPieceSquare.x, this.desiredPieceSquare.y);
-                            this.pieceSelected.moves.hadFirstMove = true;
+                            this.pieceSelected.moveCounter += 1;
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = this.pieceSelected.color.charAt(0);
                             this.checkIfKingCastled();
                             this.unselectRookforCastling();
                             this.checkPawnPromotion();
+                            this.checkPawnEnPassant();
+                            // draw empty square taken from en passant
                             this.drawSquareSelectedPiece(gameboardColor);
+                            this.pawnForEnPassant = {left: null, right: null};
                             this.desiredPieceSquare = {x: null, y: null};
                             this.pieceSelected = null;
                             this.possibleMovesArray = this.createArray();
@@ -333,6 +334,41 @@ class Board {
         }
     }
 
+    checkPawnEnPassant() {
+
+        if((!this.pawnForEnPassant.left && !this.pawnForEnPassant.right) || !this.pieceSelected || this.pieceSelected.type !== 'pawn') return
+        console.log('this.pawnForEnPassant.left')
+        console.log(this.pawnForEnPassant.left)
+        
+        console.log('this.pawnForEnPassant.right')
+        console.log(this.pawnForEnPassant.right)
+        
+        let unidirectionalFactor = this.pieceSelected.moves.unidirectional && this.checkPlayerTurn() === whitePlayer ? -1 : 1;
+        let takenPiecesArray = this.checkPlayerTurn() === whitePlayer ? this.takenPiecesFromBottomPlayer : this.takenPiecesFromTopPlayer;
+        console.log('unidirectionalFactor', unidirectionalFactor)
+        console.log(this.checkPlayerTurn())
+
+        if(this.pawnForEnPassant.left && this.pieceSelected.position[1] == this.pawnForEnPassant.left.position[1] + unidirectionalFactor 
+            && this.pieceSelected.position[0] == this.pawnForEnPassant.left.position[0]) {
+                this.fillSquareBackground(this.pawnForEnPassant.left.position[0], this.pawnForEnPassant.left.position[1], gameboardColor);
+                takenPiecesArray.push(this.pawnForEnPassant.left);
+                this.pawnForEnPassant.left.position[0] = null;
+                this.pawnForEnPassant.left.position[1] = null;
+                console.log('this.pawnForEnPassant.left.position')
+                console.log(this.pawnForEnPassant.left.position)
+        
+        }
+        
+        if(this.pawnForEnPassant.right && this.pieceSelected.position[1] == this.pawnForEnPassant.left.position[1] + unidirectionalFactor 
+            && this.pieceSelected.position[0] == this.pawnForEnPassant.left.position[0]) {
+                this.fillSquareBackground(this.pawnForEnPassant.right.position[0], this.pawnForEnPassant.right.position[1], gameboardColor);
+                takenPiecesArray.push(this.pawnForEnPassant.right);
+                this.pawnForEnPassant.right.position[0] = null;
+                this.pawnForEnPassant.right.position[1] = null;
+                console.log('this.pawnForEnPassant.right.position')
+                console.log(this.pawnForEnPassant.right.position)
+        }
+    }
 
     checkPawnPromotion() {
 
@@ -345,14 +381,14 @@ class Board {
             const pieceNameSet = new Set(pieceNamesArray);
             pieceNameSet.delete('king');
 
-            let pieceName
+            let pieceName;
             do {
                 pieceName = prompt('Select piece to promote (type: queen, rook, bishop, knight, or pawn)');
-            } while (!pieceNameSet.has(pieceName))
+            } while (!pieceNameSet.has(pieceName));
 
             let color = this.checkPlayerTurn() == whitePlayer? bottomPlayerName : topPlayerName;
-            let movesClone = {...moves[pieceName]}
-            let position = {...this.pieceSelected.position}
+            let movesClone = {...moves[pieceName]};
+            let position = {...this.pieceSelected.position};
             const piece = new Pieces(pieceName, movesClone, color, pieceImages[pieceName][color], position);
         
             if(row == 0) {
@@ -367,33 +403,24 @@ class Board {
             let player = this.checkPlayerTurn(); 
             player.pieces.push(piece);
             this.pieceSelected = piece;
-        }
+        };
     }
 
-    checkIfKingCastled(){
+    checkIfKingCastled() {
 
         if(this.pieceSelected.type != 'king') return;
 
         let kingStartingPositionXCoordinate = startingPosition.king.black[0][0];
-        //console.log('kingStartingPositionXCoordinate', kingStartingPositionXCoordinate)
         let rightKingXCoordinate = this.pieceSelected.moves.specialFirstMoveCoordinates[0][0] + kingStartingPositionXCoordinate;
-        
         let leftKingXCoordinate = this.pieceSelected.moves.specialFirstMoveCoordinates[1][0] + kingStartingPositionXCoordinate;
-        //console.log('this.pieceSelected.moves.specialFirstMoveCoordinates[1][0]', this.pieceSelected.moves.specialFirstMoveCoordinates[1][0])
-        
-        //console.log('left', this.rookForCastling.left)
-        //console.log('x position', this.pieceSelected.position[0])
-        //console.log('leftKingXCoordinate', leftKingXCoordinate)
 
         if(this.rookForCastling.left && this.pieceSelected.position[0] == leftKingXCoordinate) {
-            //console.log('condition met left')
             this.moveRookOnCastle('left');
             return;
         } else if (this.rookForCastling.right && this.pieceSelected.position[0] == rightKingXCoordinate) {
-            //console.log('condition met right')
             this.moveRookOnCastle('right');
             return;
-        }
+        };
     }
 
     moveRookOnCastle(side) {
@@ -421,60 +448,23 @@ class Board {
     }
 
     findOpposingPlayerNotation() {
-        if(whitePlayer.turn) return topPlayerNotation
-        return bottomPlayerNotation
+        if(whitePlayer.turn) return topPlayerNotation;
+        return bottomPlayerNotation;
     }    
-
-
-
-    /*
-    findPiecebyPosition(player, xCoordinate, yCoordinate) {
-
-        //let selectedPiece = null;
-        let arrayIndex;
-
-        player.pieces.forEach((piece, index) => {
-            if(piece.position[0] == xCoordinate && piece.position[1] == yCoordinate) {
-                //selectedPiece = piece;
-                //console.log('-->')
-                //console.log(selectedPiece)
-                arrayIndex = index;
-            };
-        });
-        
-        //console.log(selectedPiece)
-        //return selectedPiece;
-        console.log(arrayIndex)
-        return arrayIndex;
-    }*/
-    
 
     findPieceSelected(player) {
         player.pieces.forEach((piece) => {
             if(piece.position[0] == this.mouseSquareSelected.x && piece.position[1] == this.mouseSquareSelected.y) {
                 this.pieceSelected = piece;
-                //this.drawSquare(this.pieceSelected.position[0],this.pieceSelected.position[1], selectedSquareColor);
                 return;
-            }
-        })
+            };
+        });
     }
 
     checkDestinationSquareforOpposingPiece(xCoordinate, yCoordinate) {
         
         let player = whitePlayer.turn ? blackPlayer : whitePlayer; 
         let takenPiecesArray = player == whitePlayer ? this.takenPiecesFromBottomPlayer : this.takenPiecesFromTopPlayer;
-        //let pieceFound
-        // let index = this.findPiecebyPosition(player, xCoordinate, yCoordinate)
-        //console.log('--')
-        //console.log(pieceFound)
-        // let piece = player.pieces[index]; 
-        // console.log(index);
-        // console.log(piece)
-
-        // piece.position = [null, null]
-        //pieceFound.position = [null, null]
-        // takenPiecesArray.push(player.pieces[index]);
-
         
         player.pieces.forEach((piece) => {
             if(piece.position[0] == xCoordinate && piece.position[1] == yCoordinate) {
@@ -483,16 +473,12 @@ class Board {
                 return;
             };
        });
-
-       //console.log('this.takenPiecesFromBottomPlayer', this.takenPiecesFromBottomPlayer)
-       //console.log('this.takenPiecesFromTopPlayer', this.takenPiecesFromTopPlayer)
-
     }
 
     drawPossibleMovesGrid() {
         this.possibleMovesArray.forEach((row, indexY) => {
-            row.forEach((element, indexX) => {
-                if(element == 1) {
+            row.forEach((square, indexX) => {
+                if(square == 1) {
                     this.drawGridLinesBox(indexX , indexY, possibleMovesColor);
                 };
             });
@@ -520,7 +506,7 @@ class Pieces {
         this.color = color;
         this.imagePath = imagePath;
         this.position = position;
-        //this.active = true;
+        this.moveCounter = 0;
         this.drawPiece();
     }
 
@@ -546,28 +532,15 @@ class Pieces {
         let occupiedSamePlayer = this.color.charAt(0);
 
         coordinatesArray.forEach((element) => {
-            //console.log(coordinatesArray);
             
             let xCoordinate = this.position[0] + element[0];
             let yCoordinate = this.position[1] + element[1];
             
-                //console.log(yCoordinate, xCoordinate)
-                //console.log("-------");
-                //console.log(yCoordinate, xCoordinate);
-
-            /*
-            if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
-                yCoordinate < 0 || yCoordinate >= boardDimensions) {
-                    return;
-            } */
-
             if(this.checkOffboard(xCoordinate, yCoordinate)) return;
 
             if(board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
                 possibleMovesArray[yCoordinate][xCoordinate] = 1;
-                //board.drawGridLinesBox(xCoordinate , yCoordinate, possibleMovesColor);
-            }
-
+            };
         });
         console.table(possibleMovesArray);
     }
@@ -575,7 +548,6 @@ class Pieces {
     checkOffboard(xCoordinate, yCoordinate) {
         if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
             yCoordinate < 0 || yCoordinate >= boardDimensions) {
-                //console.log(true)
                 return true;
         }; 
     }
@@ -586,8 +558,8 @@ class Pieces {
         let occupiedSamePlayer = this.color.charAt(0);
         let unidirectionalFactor = this.moves.unidirectional ? -1: 1; 
 
-        coordinatesArray.forEach((element) => {
-            this.evaluateCoordinates(element, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, true, false, assessCheck)
+        coordinatesArray.forEach((coordinate) => {
+            this.evaluateCoordinates(coordinate, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, true, false, assessCheck)
         });
         
         console.table(possibleMovesArray);
@@ -597,7 +569,8 @@ class Pieces {
     checkCastleConditions() {
 
         if(this.type != 'king') return;
-        if(this.moves.hadFirstMove) return;
+        if(this.moveCounter > 0) return;
+        //console.log('this.moves.moveCounter', this.moveCounter)
 
         let rightSquareClear = this.checkCastleSideSquares('right');
         let leftSquareClear = this.checkCastleSideSquares('left');
@@ -611,14 +584,14 @@ class Pieces {
         player.pieces.forEach((piece) => {
             if(rightSquareClear && piece.position[0] == rightRookCoordinates[0] 
                 && piece.position[1] == rightRookCoordinates[1] 
-                && piece.type == 'rook' && !piece.moves.hadFirstMove) {
+                && piece.type == 'rook' && piece.moveCounter === 0) {
                     board.rookForCastling.right = piece;
                     board.possibleMovesArray[piece.position[1]][piece.position[0] - 1] = 1;
             };
             
             if(leftSquareClear && piece.position[0] == leftRookCoordinates[0] 
                 && piece.position[1] == leftRookCoordinates[1] 
-                && piece.type == 'rook' && !piece.moves.hadFirstMove) {
+                && piece.type == 'rook' && piece.moveCounter === 0) {
                     board.rookForCastling.left = piece;
                     board.possibleMovesArray[piece.position[1]][piece.position[0] + 2] = 1;
             };
@@ -652,7 +625,7 @@ class Pieces {
             }); 
         }
 
-       if(this.moves.hasSpecialFirstMove && !this.moves.hadFirstMove && !assessCheck) {
+       if(this.moves.hasSpecialFirstMove && this.moveCounter === 0 && !assessCheck) {
             let specialFirstMoveArray = this.moves.specialFirstMoveCoordinates;
             specialFirstMoveArray.forEach((coordinates) => {
                 this.evaluateCoordinates(coordinates, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, false, false, assessCheck);
@@ -665,6 +638,37 @@ class Pieces {
                 this.evaluateCoordinates(coordinates, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, true, true, assessCheck);
             });
         }
+
+        if(!assessCheck) {
+            this.evaluateEnPassant(possibleMovesArray, unidirectionalFactor);
+        };
+    }
+    
+    evaluateEnPassant(possibleMovesArray, unidirectionalFactor) {
+        //console.log('unidirectionalFactor', unidirectionalFactor);
+        
+        if(!board.pieceSelected || board.pieceSelected.type != 'pawn') return;
+
+        let row = boardDimensions / 2 + Math.min(unidirectionalFactor, 0);
+        //console.log(row)
+
+        if(board.pieceSelected.position[1] == row) {
+
+            let opposingPlayer = board.findOpposingPlayer();
+
+            opposingPlayer.pieces.forEach((piece) => {
+                if(piece.position[1] == row && piece.type == 'pawn' && piece.moveCounter == 1) {
+                    if(board.pieceSelected.position[0] > 0 && board.pieceSelected.position[0] - 1 == piece.position[0]) {
+                        board.pawnForEnPassant.left = piece;
+                        possibleMovesArray[piece.position[1] + unidirectionalFactor][piece.position[0]] = 1;
+                    };
+                    if(board.pieceSelected.position[0] < boardDimensions - 1 && board.pieceSelected.position[0] + 1 == piece.position[0]) {
+                        board.pawnForEnPassant.right = piece;
+                        possibleMovesArray[piece.position[1] + unidirectionalFactor][piece.position[0]] = 1;
+                    };
+                };
+            });    
+        };
     }
 
 
@@ -757,86 +761,6 @@ class Pieces {
         } while (!exitFlag);
 
     }
-
-    /*
-    evaluateCoordinates(element, occupiedSamePlayer, unidirectionalFactor, canAttack, onlyAttack) {
-
-        let attackCondition = canAttack? 1 : 0;
-        let occupiedOpposingPlayer = board.findOpposingPlayerNotation();
-        //let attackOpposingPlayer = false;
-        //console.log(occupiedOpposingPlayer)
-        //console.table(board.boardArray)
-        //console.log(element)
-        //console.log("unidirectionalFactor:", unidirectionalFactor);
-        let yMove  = element[1] * unidirectionalFactor;
-        //console.log(element)
-        
-        let exitFlag = 0;
-        let xDirection = element[0] == 0 ? 0 : element[0] / Math.abs(element[0]);
-        let yDirection = yMove == 0 ? 0 : yMove / Math.abs(yMove);
-        let xCoordinate = this.position[0];
-        let yCoordinate = this.position[1];
-        let occupiedOtherPlayerCounter = 0;
-
-        let xMax = element[0] == 0 ? boardDimensions - 1 : Math.abs(element[0]);
-        let yMax = yMove == 0 ? boardDimensions - 1 : Math.abs(yMove);
-        let xCounter = 0;
-        let yCounter = 0;
-
-        do {
-
-            //console.log("x:", xCoordinate, "y:", yCoordinate)
-            //console.log(element)
-            //console.log("x:", element[0], "y:", yMove)
-            //console.log("-------")
-            
-            xCoordinate = xCoordinate + xDirection;
-            yCoordinate = yCoordinate + yDirection;
-
-            //console.log("x:", xCoordinate, "y:", yCoordinate)
-
-            if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
-                yCoordinate < 0 || yCoordinate >= boardDimensions) {
-                    //console.log('offboard')
-                    return;
-            } 
-            
-            if(board.boardArray[yCoordinate][xCoordinate] == occupiedSamePlayer ||
-                occupiedOtherPlayerCounter > 0 || xCounter >= xMax || yCounter >= yMax) {
-                    //console.log('occupiedSamePlayer: ', board.boardArray[yCoordinate][xCoordinate], yCoordinate, xCoordinate, board.boardArray[yCoordinate][xCoordinate] == occupiedSamePlayer)
-                    //console.log('occupiedOtherPlayerCounter: ', occupiedOtherPlayerCounter)
-                    //console.log('xCounter > xMax: ', xCounter, xMax)
-                    //console.log('yCounter > yMax: ', yCounter, yMax)
-                    exitFlag = 1;
-                    
-            } else {
-
-                //console.log('this.boardArray[yCoordinate][xCoordinate]', board.boardArray[yCoordinate][xCoordinate])
-                //console.log('this.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer', board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer)
-                if(board.boardArray[yCoordinate][xCoordinate] &&
-                    board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer) {
-                        //if(occupiedOtherPlayerCounter > 0) return;
-                        occupiedOtherPlayerCounter += 1;
-                        //attackOpposingPlayer = true;
-                        //console.log('occupiedOtherPlayerCounter', occupiedOtherPlayerCounter)
-                }
-
-                //console.log(onlyAttack, board.boardArray[yCoordinate][xCoordinate], occupiedOpposingPlayer)
-                if(onlyAttack && board.boardArray[yCoordinate][xCoordinate] == occupiedOpposingPlayer) {
-                    //console.log('condition met')
-                    board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
-                } else if (!onlyAttack && occupiedOtherPlayerCounter < attackCondition + 1 ) {
-                    board.possibleMovesArray[yCoordinate][xCoordinate] = 1;
-                }
-            }
-
-            xCounter++;
-            yCounter++;
-
-        } while (!exitFlag);
-
-    }*/
-
         
 }
 
@@ -850,10 +774,10 @@ function setupPieces(color) {
 
     let pieceInstanceArray = [];
 
-    pieceNamesArray.forEach((element, index) => {
+    pieceNamesArray.forEach((pieceName, index) => {
         for(let i = 0; i < pieceCountArray[index]; i++) {
-            let movesClone = {...moves[element]}
-            const piece = new Pieces(element, movesClone, color, pieceImages[element][color], startingPosition[element][color][i]);
+            let movesClone = {...moves[pieceName]}
+            const piece = new Pieces(pieceName, movesClone, color, pieceImages[pieceName][color], startingPosition[pieceName][color][i]);
             pieceInstanceArray.push(piece);
         }
     });
