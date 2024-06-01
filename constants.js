@@ -60,22 +60,16 @@ const differentAttackMove = {
 
 export const moves = {
 
-    bishop: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7]], unidirectional: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null, subjectToEnPassant: false},
-    king: {coordinates: [[-1, 1], [1, 1], [1, -1], [-1, -1], [-1, 0], [1, 0], [0, 1], [0, -1]], unidirectional: false, hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.king.coordinates, differentAttack: false, differentAttackMoveCoordiates: null, subjectToEnPassant: false},
-    knight: {coordinates: [[2, -1], [2, 1], [-2, -1], [-2, 1], [-1, 2], [1, 2], [-1, -2], [1, -2]], unidirectional: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null, subjectToEnPassant: false},
-    pawn: {coordinates: [[0, 1]], unidirectional: true,  hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.pawn.coordinates, differentAttack: true, differentAttackMoveCoordiates: differentAttackMove.pawn.coordinates,subjectToEnPassant: false},
-    queen: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7], [-7, 0], [7, 0], [0, 7], [0, -7]], unidirectional: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null,subjectToEnPassant: false},
-    rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], unidirectional: false, hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.rook.coordinates, differentAttack: false, differentAttackMoveCoordiates: null,subjectToEnPassant: false},
-
+    bishop: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7]], unidirectional: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null},
+    king: {coordinates: [[-1, 1], [1, 1], [1, -1], [-1, -1], [-1, 0], [1, 0], [0, 1], [0, -1]], unidirectional: false, hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.king.coordinates, differentAttack: false, differentAttackMoveCoordiates: null},
+    knight: {coordinates: [[2, -1], [2, 1], [-2, -1], [-2, 1], [-1, 2], [1, 2], [-1, -2], [1, -2]], unidirectional: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null},
+    pawn: {coordinates: [[0, 1]], unidirectional: true,  hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.pawn.coordinates, differentAttack: true, differentAttackMoveCoordiates: differentAttackMove.pawn.coordinates},
+    queen: {coordinates: [[-7, 7], [7, 7], [7, -7], [-7, -7], [-7, 0], [7, 0], [0, 7], [0, -7]], unidirectional: false, hasSpecialFirstMove: false, specialFirstMoveCoordinates: null, differentAttack: false, differentAttackMoveCoordiates: null},
+    rook: {coordinates: [[-7, 0], [7, 0], [0, 7], [0, -7]], unidirectional: false, hasSpecialFirstMove: true, specialFirstMoveCoordinates: specialFirstMove.rook.coordinates, differentAttack: false, differentAttackMoveCoordiates: null},
     //top lefthand corner are coordinates x = 0, y = 0;
-    //coordinates for player on bottom side;
-    // pawn - en passant
-    // king + rook - castling - need to ensure not in check before and after move
-
 } 
 
-
-
+export const score = {bishop: 3, king: null, knight: 3, pawn: 1, queen: 9, rook: 5}
 
 
 // images - source: https://commons.wikimedia.org/wiki/Category:PNG_chess_pieces/Standard_transparent;

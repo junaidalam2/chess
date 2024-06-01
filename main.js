@@ -9,6 +9,10 @@ TODO:
 -database for wins, losses, draws, scores
 -sound for clicks, win, loss, draw
 -visualization - taken pieces, scores, volume, pawn promotion 
+-castlelling - can't do it when in check
+-restrict move when king in check
+
+
 
 */
 
@@ -36,6 +40,7 @@ import {
     pieceWidth,
     startingPosition,
     moves,
+    score,
     pieceImages,
     pieceNamesArray,
     pieceCountArray,
@@ -276,16 +281,20 @@ class Board {
             } else if (this.pieceSelected.position[0] == this.mouseSquareSelected.x &&
                 this.pieceSelected.position[1] == this.mouseSquareSelected.y) {
                     this.drawSquareSelectedPiece(gameboardColor);
-                    this.pieceSelected = null;
                     
                     if(this.desiredPieceSquare.x != null && this.desiredPieceSquare.y != null) {
                         this.fillSquareBackground(this.desiredPieceSquare.x, this.desiredPieceSquare.y, gameboardColor);
                     }
                     
+                    /*
+                    this.pieceSelected = null;
                     this.desiredPieceSquare = {x: null, y: null};
+                    this.pawnForEnPassant = {left: null, right: null};
                     this.possibleMovesArray = this.createArray();
                     this.opposingPlayerPossibleAttackArray = this.createArray();
                     this.unselectRookforCastling();
+                    */
+                    this.resetNewPieceOrNextTurn();
                     this.drawGridLinesBoard();
                     this.drawPossibleMovesGrid();
             
@@ -310,16 +319,20 @@ class Board {
                             this.pieceSelected.moveCounter += 1;
                             this.boardArray[this.pieceSelected.position[1]][this.pieceSelected.position[0]] = this.pieceSelected.color.charAt(0);
                             this.checkIfKingCastled();
-                            this.unselectRookforCastling();
                             this.checkPawnPromotion();
                             this.checkPawnEnPassant();
-                            // draw empty square taken from en passant
                             this.drawSquareSelectedPiece(gameboardColor);
+                            
+                            /*
+                            this.unselectRookforCastling();
                             this.pawnForEnPassant = {left: null, right: null};
                             this.desiredPieceSquare = {x: null, y: null};
                             this.pieceSelected = null;
                             this.possibleMovesArray = this.createArray();
                             this.opposingPlayerPossibleAttackArray = this.createArray();
+                            */
+                            this.resetNewPieceOrNextTurn();
+
                             this.changePlayerturn();
                             console.table(this.boardArray);
                     } 
@@ -334,6 +347,15 @@ class Board {
         }
     }
 
+    resetNewPieceOrNextTurn() {
+        this.unselectRookforCastling();
+        this.pawnForEnPassant = {left: null, right: null};
+        this.desiredPieceSquare = {x: null, y: null};
+        this.pieceSelected = null;
+        this.possibleMovesArray = this.createArray();
+        this.opposingPlayerPossibleAttackArray = this.createArray();
+    }
+    
     checkPawnEnPassant() {
 
         if((!this.pawnForEnPassant.left && !this.pawnForEnPassant.right) || !this.pieceSelected || this.pieceSelected.type !== 'pawn') return
@@ -352,21 +374,23 @@ class Board {
             && this.pieceSelected.position[0] == this.pawnForEnPassant.left.position[0]) {
                 this.fillSquareBackground(this.pawnForEnPassant.left.position[0], this.pawnForEnPassant.left.position[1], gameboardColor);
                 takenPiecesArray.push(this.pawnForEnPassant.left);
+                this.boardArray[this.pawnForEnPassant.left.position[1]][this.pawnForEnPassant.left.position[0]] = 0;
                 this.pawnForEnPassant.left.position[0] = null;
                 this.pawnForEnPassant.left.position[1] = null;
-                console.log('this.pawnForEnPassant.left.position')
-                console.log(this.pawnForEnPassant.left.position)
+                //console.log('this.pawnForEnPassant.left.position')
+                //console.log(this.pawnForEnPassant.left.position)
         
         }
         
-        if(this.pawnForEnPassant.right && this.pieceSelected.position[1] == this.pawnForEnPassant.left.position[1] + unidirectionalFactor 
-            && this.pieceSelected.position[0] == this.pawnForEnPassant.left.position[0]) {
+        if(this.pawnForEnPassant.right && this.pieceSelected.position[1] == this.pawnForEnPassant.right.position[1] + unidirectionalFactor 
+            && this.pieceSelected.position[0] == this.pawnForEnPassant.right.position[0]) {
                 this.fillSquareBackground(this.pawnForEnPassant.right.position[0], this.pawnForEnPassant.right.position[1], gameboardColor);
                 takenPiecesArray.push(this.pawnForEnPassant.right);
+                this.boardArray[this.pawnForEnPassant.right.position[1]][this.pawnForEnPassant.right.position[0]] = 0;
                 this.pawnForEnPassant.right.position[0] = null;
                 this.pawnForEnPassant.right.position[1] = null;
-                console.log('this.pawnForEnPassant.right.position')
-                console.log(this.pawnForEnPassant.right.position)
+                //console.log('this.pawnForEnPassant.right.position')
+                //console.log(this.pawnForEnPassant.right.position)
         }
     }
 
@@ -500,12 +524,13 @@ class Players {
 
 
 class Pieces {
-    constructor(type, moves, color, imagePath, position) {
+    constructor(type, moves, color, imagePath, position, score) {
         this.type = type;
         this.moves = moves;
         this.color = color;
         this.imagePath = imagePath;
         this.position = position;
+        this.score = score;
         this.moveCounter = 0;
         this.drawPiece();
     }
@@ -777,7 +802,7 @@ function setupPieces(color) {
     pieceNamesArray.forEach((pieceName, index) => {
         for(let i = 0; i < pieceCountArray[index]; i++) {
             let movesClone = {...moves[pieceName]}
-            const piece = new Pieces(pieceName, movesClone, color, pieceImages[pieceName][color], startingPosition[pieceName][color][i]);
+            const piece = new Pieces(pieceName, movesClone, color, pieceImages[pieceName][color], startingPosition[pieceName][color][i], score[pieceName]);
             pieceInstanceArray.push(piece);
         }
     });
