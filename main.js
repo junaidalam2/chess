@@ -1,7 +1,6 @@
 
 /*
 TODO:
--castlelling - can't do it when in check
 -restrict move when king in check
 -add winning and draw conditions
 -create a session class that can create instances of the other relevant classes
@@ -154,13 +153,8 @@ class Board {
     possibleMoves(piece, possibleMovesArray, assessCheck) {
 
         if(!piece) return;
+        //if(piece.type != 'king' && board.KingInCheck) return;
 
-        
-        if(piece.type != 'king' && this.KingInCheck) {
-            //window.alert('King is in check');
-            return;
-        }
-        
         switch (piece.type) {
             case 'knight':
                 piece.possibleMovesKnight(possibleMovesArray);
@@ -178,7 +172,7 @@ class Board {
     findPossibleCheck() {
 
         this.findOpposingPlayerAttack();
-        this.determineKingInCheck();
+        //this.determineKingInCheck();
         this.adjustPossibleMovesForPossibleCheck();
         this.assessPossibleAttackForPossibleCheck();
     }
@@ -275,6 +269,7 @@ class Board {
                 this.findPieceSelected(player)
                 this.drawSquareSelectedPiece(selectedSquareColor);
                 this.possibleMoves(this.pieceSelected, board.possibleMovesArray, false);
+                //this.determineKingInCheck();
                 this.findPossibleCheck();
                 this.drawPossibleMovesGrid();
                 
@@ -317,6 +312,7 @@ class Board {
                             this.drawSquareSelectedPiece(gameboardColor);
                             this.resetNewPieceOrNextTurn();
                             this.changePlayerturn();
+                            this.determineKingInCheck();
                             console.table(this.boardArray);
                     } 
                     
@@ -342,6 +338,14 @@ class Board {
     determineKingInCheck() {
         
         //this.findOpposingPlayerAttack();
+
+        let player = this.findOpposingPlayer();
+        console.log(player);
+        console.log(player.pieces);
+
+        player.pieces.forEach((piece) => {
+            this.possibleMoves(piece, this.opposingPlayerPossibleAttackArray, true);
+        })
 
         let kingPosition = this.checkPlayerTurn().kingPieceInstance.position;
         if(this.opposingPlayerPossibleAttackArray[kingPosition[1]][kingPosition[0]]) {
@@ -571,7 +575,7 @@ class Pieces {
                 possibleMovesArray[yCoordinate][xCoordinate] = 1;
             };
         });
-        console.table(possibleMovesArray);
+        //console.table(possibleMovesArray);
     }
 
     checkOffboard(xCoordinate, yCoordinate) {
@@ -597,23 +601,27 @@ class Pieces {
 
     checkCastleConditions() {
 
-        if(this.type != 'king') return;
-        if(this.moveCounter > 0) return;
+        //console.log('this.KingInCheck', board.KingInCheck)
+        if(this.type != 'king' || this.moveCounter > 0 || board.KingInCheck) return;
+        //if(this.moveCounter > 0) return;
         //console.log('this.moves.moveCounter', this.moveCounter)
+        //console.log('condition met - castle')
 
         let rightSquareClear = this.checkCastleSideSquares('right');
         let leftSquareClear = this.checkCastleSideSquares('left');
 
         if(!rightSquareClear && !leftSquareClear) return;
+        //console.log('right clear', rightSquareClear, 'leftSquareClear', leftSquareClear)
         
-        let rightRookCoordinates = [[this.position[0] + 3], [this.position[1]]];
-        let leftRookCoordinates = [[this.position[0] - 4], [this.position[1]]];
+        let rightRookCoordinates = [this.position[0] + 3, this.position[1]];
+        let leftRookCoordinates = [this.position[0] - 4, this.position[1]];
         let player = board.checkPlayerTurn();
 
         player.pieces.forEach((piece) => {
+
             if(rightSquareClear && piece.position[0] === rightRookCoordinates[0] 
                 && piece.position[1] === rightRookCoordinates[1] 
-                && piece.type == 'rook' && piece.moveCounter === 0) {
+                && piece.type === 'rook' && piece.moveCounter === 0) {
                     board.rookForCastling.right = piece;
                     board.possibleMovesArray[piece.position[1]][piece.position[0] - 1] = 1;
             };
