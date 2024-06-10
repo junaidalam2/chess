@@ -58,10 +58,7 @@ class Board {
         this.rookForCastling = {left: null, right: null};
         this.pawnForEnPassant = {left: null, right: null};
         this.KingInCheck = false;
-        //this.takenPiecesFromTopPlayer = [];
-        //this.takenPiecesFromBottomPlayer = [];
-        //this.pawnedPiecesTopPlayer = [];
-        //this.pawnedPiecesBottomPlayer = [];
+        this.checkBlockingPiece = false;
         this.boardArray = this.createArray();
         this.possibleMovesArray = this.createArray();
         this.opposingPlayerPossibleAttackArray = this.createArray();
@@ -155,8 +152,11 @@ class Board {
         if(!piece) return;
         //if(piece.type != 'king' && board.KingInCheck) return;
 
+        //if(this.KingInCheck) this.checkAssessBlockingPiece = true;
+
         switch (piece.type) {
             case 'knight':
+                //this.checkAssessBlockingPiece ? piece.possibleMovesKnightCheck(possibleMovesArray) : 
                 piece.possibleMovesKnight(possibleMovesArray);
                 break;
             case 'pawn':
@@ -269,6 +269,8 @@ class Board {
                 this.findPieceSelected(player)
                 this.drawSquareSelectedPiece(selectedSquareColor);
                 this.possibleMoves(this.pieceSelected, board.possibleMovesArray, false);
+                console.log('possible moves after first click')
+                console.table(board.possibleMovesArray);
                 //this.determineKingInCheck();
                 this.findPossibleCheck();
                 this.drawPossibleMovesGrid();
@@ -312,7 +314,9 @@ class Board {
                             this.drawSquareSelectedPiece(gameboardColor);
                             this.resetNewPieceOrNextTurn();
                             this.changePlayerturn();
-                            this.determineKingInCheck();
+                            this.KingInCheck = this.determineKingInCheck();
+                            console.log('this.KingInCheck', this.KingInCheck)
+                            console.log('board array after second click')
                             console.table(this.boardArray);
                     } 
                     
@@ -340,8 +344,8 @@ class Board {
         //this.findOpposingPlayerAttack();
 
         let player = this.findOpposingPlayer();
-        console.log(player);
-        console.log(player.pieces);
+        //console.log(player);
+        //console.log(player.pieces);
 
         player.pieces.forEach((piece) => {
             this.possibleMoves(piece, this.opposingPlayerPossibleAttackArray, true);
@@ -349,16 +353,19 @@ class Board {
 
         let kingPosition = this.checkPlayerTurn().kingPieceInstance.position;
         if(this.opposingPlayerPossibleAttackArray[kingPosition[1]][kingPosition[0]]) {
-            this.KingInCheck = true;
-            window.alert('King is in check');
-        } else {
-            this.KingInCheck = false;
-        }
-        console.log('this.KingInCheck', this.KingInCheck)
+            //this.KingInCheck = true;
+            //this.checkAssessBlockingPiece = true;
+            //window.alert('King is in check');
+            this.opposingPlayerPossibleAttackArray = this.createArray();
+            return true;
+        } 
+        this.opposingPlayerPossibleAttackArray = this.createArray();
+        return false;
+        
+        //console.log('this.KingInCheck', this.KingInCheck)
+
     }
 
-
-    
     checkPawnEnPassant() {
 
         if((!this.pawnForEnPassant.left && !this.pawnForEnPassant.right) || !this.pieceSelected || this.pieceSelected.type != 'pawn') return
@@ -499,7 +506,7 @@ class Board {
                 piece.position = [null, null]
                 takenPiecesArray.push(piece);
                 this.checkPlayerTurn().score += piece.score;
-                console.log('score', this.checkPlayerTurn().score);
+                //console.log('score', this.checkPlayerTurn().score);
                 return;
             };
        });
@@ -572,11 +579,123 @@ class Pieces {
             if(this.checkOffboard(xCoordinate, yCoordinate)) return;
 
             if(board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
+                
+                /*
+                if(board.KingInCheck) {
+                    this.possibleMovesCheck(possibleMovesArray, xCoordinate, yCoordinate)
+                } else {
+                    possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                }*/
                 possibleMovesArray[yCoordinate][xCoordinate] = 1;
+
             };
         });
         //console.table(possibleMovesArray);
     }
+
+    possibleMovesCheck(possibleMovesArray, xCoordinate, yCoordinate) {
+
+        //if(this.type != 'knight') return
+
+        board.boardArray[this.position[1]][this.position[0]] = 0;
+        board.boardArray[yCoordinate][xCoordinate] = this.color.charAt(0);
+
+        if(!board.determineKingInCheck()) {
+            console.log('enters if condition')
+            possibleMovesArray[yCoordinate][xCoordinate] = 1;
+        }
+
+        board.boardArray[this.position[1]][this.position[0]] = this.color.charAt(0); 
+        board.boardArray[yCoordinate][xCoordinate] = 0;
+
+        /*
+
+        let coordinatesArray = this.moves.coordinates;
+        let occupiedSamePlayer = this.color.charAt(0);
+        let position = this.position;
+        let counter = 0;
+
+        coordinatesArray.forEach((element) => {
+            
+            let xCoordinate = this.position[0] + element[0];
+            let yCoordinate = this.position[1] + element[1];
+            console.log('counter', counter)
+            if(this.checkOffboard(xCoordinate, yCoordinate)) return;
+
+            if(board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
+                board.boardArray[position[1]][position[0]] = 0;
+                board.boardArray[yCoordinate][xCoordinate] = occupiedSamePlayer;
+                console.log('board position swaps', position, yCoordinate, xCoordinate)
+                //board.boardArray
+                //board.KingInCheck = false;
+                //board.determineKingInCheck();
+                if(!board.determineKingInCheck()) {
+                    console.log('enters if condition')
+                    possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                }
+                board.boardArray[position[1]][position[0]] = occupiedSamePlayer;
+                board.boardArray[yCoordinate][xCoordinate] = 0;
+            };
+            counter++;
+        });
+
+        */
+
+        console.log('check function possible moves arrray')
+        console.table(possibleMovesArray)
+        console.log('check function board arrray')
+        console.table(board.boardArray)
+        //board.KingInCheck = true;
+        board.checkBlockingPiece = false;
+        //console.table(possibleMovesArray);
+
+    }
+
+
+    /*
+    possibleMovesKnightCheck2(possibleMovesArray) {
+        
+        if(this.type != 'knight') return
+
+        let coordinatesArray = this.moves.coordinates;
+        let occupiedSamePlayer = this.color.charAt(0);
+        let position = this.position;
+        let counter = 0;
+
+        coordinatesArray.forEach((element) => {
+            
+            let xCoordinate = this.position[0] + element[0];
+            let yCoordinate = this.position[1] + element[1];
+            console.log('counter', counter)
+            if(this.checkOffboard(xCoordinate, yCoordinate)) return;
+
+            if(board.boardArray[yCoordinate][xCoordinate] != occupiedSamePlayer) {
+                board.boardArray[position[1]][position[0]] = 0;
+                board.boardArray[yCoordinate][xCoordinate] = occupiedSamePlayer;
+                console.log('board position swaps', position, yCoordinate, xCoordinate)
+                //board.boardArray
+                //board.KingInCheck = false;
+                //board.determineKingInCheck();
+                if(!board.determineKingInCheck()) {
+                    console.log('enters if condition')
+                    possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                }
+                board.boardArray[position[1]][position[0]] = occupiedSamePlayer;
+                board.boardArray[yCoordinate][xCoordinate] = 0;
+            };
+            counter++;
+        });
+
+        console.log('knight check function possible moves arrray')
+        console.table(possibleMovesArray)
+        console.log('knight check function board arrray')
+        console.table(board.boardArray)
+        //board.KingInCheck = true;
+        board.checkBlockingPiece = false;
+        //console.table(possibleMovesArray);
+    }*/
+
+
 
     checkOffboard(xCoordinate, yCoordinate) {
         if(xCoordinate < 0 || xCoordinate >= boardDimensions || 
@@ -595,7 +714,7 @@ class Pieces {
             this.evaluateCoordinates(coordinate, possibleMovesArray, occupiedSamePlayer, unidirectionalFactor, true, false, assessCheck)
         });
         
-        console.table(possibleMovesArray);
+        //console.table(possibleMovesArray);
         
     }
 
@@ -781,11 +900,23 @@ class Pieces {
                     
                     possibleMovesArray[yCoordinate][xCoordinate] = 1;
 
+                    /*
+                    if(board.KingInCheck && !assessCheck) {
+                        this.possibleMovesCheck(possibleMovesArray, xCoordinate, yCoordinate)
+                    } else {
+                        possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                    }*/
 
                 } else if (!onlyAttack && occupiedOtherPlayerCounter < attackCondition + 1) {
 
+                    possibleMovesArray[yCoordinate][xCoordinate] = 1;
+                    
+                    /*
+                    if(board.KingInCheck) {
+                        this.possibleMovesCheck(possibleMovesArray, xCoordinate, yCoordinate)
+                    } else {
                         possibleMovesArray[yCoordinate][xCoordinate] = 1;
-                
+                    }*/
                 } 
 
                 
